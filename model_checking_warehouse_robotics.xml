@@ -17,6 +17,9 @@ const int POD_AND_ROBOT = 3;
 const int POD_FREE = 0;
 const int POD_OCCUPIED = 1;
 
+// Max number of processes
+const int MAX_T = 10;
+
 // Number of pods
 const int PODS_N = N*M - (N/2)*M - (N/2 + N%2)*4;
 
@@ -32,6 +35,8 @@ int current_length_queue = 0;
 int task_queue[MAX_T];
 
 chan pods_channel[PODS_N];
+chan take_pod;
+chan release_pod;
 
 
 
@@ -69,23 +74,23 @@ void place_pods() {
 }</declaration>
 	<template>
 		<name>Task_Queue</name>
-		<parameter>int T, int MAX_T</parameter>
+		<parameter>int T</parameter>
 		<declaration>clock t;
 
 void add_task(int id_pod) {
-    task_queue[current_length] = id_pod;
-    current_length++;
+    task_queue[current_length_queue] = id_pod;
+    current_length_queue++;
 }
 
 void remove_task() {
     int i;
 
-    for (i=1; i&lt;current_length; i++) {
+    for (i=1; i&lt;current_length_queue; i++) {
         task_queue[i-1] = task_queue[i];
     }
 
-    task_queue[current_length - 1] = -1;
-    current_length--;
+    task_queue[current_length_queue - 1] = -1;
+    current_length_queue--;
 }
 
 void initialize_task_queue() {
@@ -116,7 +121,7 @@ void initialize_task_queue() {
 		<transition>
 			<source ref="id1"/>
 			<target ref="id3"/>
-			<label kind="guard" x="-748" y="-68">current_length&gt;=MAX_T  &amp;&amp; t==T</label>
+			<label kind="guard" x="-748" y="-68">current_length_queue&gt;=MAX_T  &amp;&amp; t==T</label>
 		</transition>
 		<transition>
 			<source ref="id2"/>
@@ -126,7 +131,7 @@ void initialize_task_queue() {
 		<transition>
 			<source ref="id1"/>
 			<target ref="id2"/>
-			<label kind="guard" x="-697" y="-365">current_length&lt;MAX_T &amp;&amp; t==T</label>
+			<label kind="guard" x="-697" y="-365">current_length_queue&lt;MAX_T &amp;&amp; t==T</label>
 		</transition>
 		<transition>
 			<source ref="id0"/>
@@ -160,6 +165,7 @@ initialize_task_queue()</label>
 	</template>
 	<template>
 		<name x="5" y="5">Human</name>
+		<parameter>int H</parameter>
 		<declaration>// Place local declarations here.
 clock t;</declaration>
 		<location id="id8" x="-850" y="-314">
@@ -173,26 +179,26 @@ clock t;</declaration>
 			<source ref="id9"/>
 			<target ref="id8"/>
 			<label kind="guard" x="-705" y="-408">t==H</label>
-			<label kind="synchronisation" x="-705" y="-391">robot!</label>
+			<label kind="synchronisation" x="-731" y="-391">release_pod!</label>
 			<nail x="-688" y="-374"/>
 		</transition>
 		<transition>
 			<source ref="id8"/>
 			<target ref="id9"/>
-			<label kind="synchronisation" x="-705" y="-229">robot?</label>
+			<label kind="synchronisation" x="-722" y="-229">take_pod?</label>
 			<label kind="assignment" x="-697" y="-212">t=0</label>
 			<nail x="-688" y="-238"/>
 		</transition>
 	</template>
-	<system>const int MAX_T = 10;
-const int T = 5;
+	<system>const int T = 5;
+const int H = 1;
 
 // Place template instantiations here.
-human = Human();
-task_queue = Task_Queue(T, MAX_T);
+human = Human(H);
+task_queue_process = Task_Queue(T);
 
 // List one or more processes to be composed into a system.
-system human, task_queue;</system>
+system human, task_queue_process;</system>
 	<queries>
 		<query>
 			<formula></formula>
