@@ -31,12 +31,19 @@ int grid[N][M];
 // The first array is simply a way of giving the id to each pod (necessary to select them during the assignment of a task to a robot)
 int pods[PODS_N][3];
 
+// task_queue is global so that the process Robot and the process Task_Queue can synchronize on it.
 int current_length_queue = 0;
 int task_queue[MAX_T];
 
+
+// CHANNELS OF THE MODEL
+
+// Array of channels, where the id of the array corresponds to the pod_id, chosen unambigously during the intialization of the map.
 chan pods_channel[PODS_N];
-chan take_pod;
-chan release_pod;
+
+// Channels which synchronize when the human takes the item and the robot gives the item.
+chan take_item;
+chan release_item;
 
 
 
@@ -80,6 +87,8 @@ void place_pods() {
 void add_task(int id_pod) {
     task_queue[current_length_queue] = id_pod;
     current_length_queue++;
+
+    pods[id_pod][2] = POD_OCCUPIED;
 }
 
 void remove_task() {
@@ -99,20 +108,61 @@ void initialize_task_queue() {
     for (i=0; i&lt;MAX_T; i++) {
         task_queue[i] = -1;
     }
+}
+
+bool pod_available(int id_pod) {
+    return pods[id_pod][2] == POD_FREE;
+}
+
+
+
+// It returns the number of pods available in this instant.
+// It is used in the select of a random pod.
+int free_pods_number() {
+    int number = 0;
+
+    int pod_id;
+
+    for (pod_id = 0; pod_id&lt;N; pod_id++) {
+        if (pods[pod_id][2] == POD_FREE) {
+            number++;
+        }
+    }
+
+    return number;
 }</declaration>
 		<location id="id0" x="-1079" y="-340">
 			<name x="-1096" y="-374">start</name>
 		</location>
 		<location id="id1" x="-756" y="-340">
+			<label kind="invariant" x="-807" y="-331">t&lt;=T</label>
 		</location>
 		<location id="id2" x="-399" y="-340">
 		</location>
-		<location id="id3" x="-442" y="-25">
-			<name x="-452" y="-59">Error_maxSizeReached</name>
+		<location id="id3" x="-323" y="-204">
+			<name x="-333" y="-238">Error_maxSizeReached</name>
 		</location>
 		<location id="id4" x="-59" y="-476">
 		</location>
+		<location id="id5" x="-612" y="-68">
+			<name x="-655" y="-43">Err_pod_unavailable</name>
+		</location>
 		<init ref="id0"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-867" y="-136">current_length_queue&lt;MAX_T
+&amp;&amp; t==T</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="select" x="-850" y="-510">id_pod : int[0 , PODS_N]</label>
+			<label kind="guard" x="-986" y="-484">current_length_queue&lt;MAX_T &amp;&amp; t==T &amp;&amp; pod_available(id_pod)</label>
+			<label kind="assignment" x="-825" y="-459">add_task(id_pod)</label>
+			<nail x="-842" y="-434"/>
+			<nail x="-689" y="-434"/>
+		</transition>
 		<transition>
 			<source ref="id2"/>
 			<target ref="id4"/>
@@ -121,17 +171,8 @@ void initialize_task_queue() {
 		<transition>
 			<source ref="id1"/>
 			<target ref="id3"/>
-			<label kind="guard" x="-748" y="-68">current_length_queue&gt;=MAX_T  &amp;&amp; t==T</label>
-		</transition>
-		<transition>
-			<source ref="id2"/>
-			<target ref="id1"/>
-			<nail x="-586" y="-442"/>
-		</transition>
-		<transition>
-			<source ref="id1"/>
-			<target ref="id2"/>
-			<label kind="guard" x="-697" y="-365">current_length_queue&lt;MAX_T &amp;&amp; t==T</label>
+			<label kind="guard" x="-612" y="-221">current_length_queue&gt;=MAX_T 
+&amp;&amp; t==T</label>
 		</transition>
 		<transition>
 			<source ref="id0"/>
@@ -145,21 +186,21 @@ initialize_task_queue()</label>
 	<template>
 		<name>Task</name>
 		<declaration>int position_pod;    // in teoria è il numero associato al pod e quindi alla POSIZIONE del pod, per come l'abbiamo pensata fin'ora</declaration>
-		<location id="id5" x="-501" y="-212">
+		<location id="id6" x="-501" y="-212">
 		</location>
-		<init ref="id5"/>
+		<init ref="id6"/>
 	</template>
 	<template>
 		<name>Robot</name>
 		<declaration>int position_pod;    // in teoria è il numero associato al pod e quindi alla POSIZIONE del pod, per come l'abbiamo pensata fin'ora</declaration>
-		<location id="id6" x="-1037" y="-433">
+		<location id="id7" x="-1037" y="-433">
 		</location>
-		<location id="id7" x="-714" y="-416">
+		<location id="id8" x="-714" y="-416">
 		</location>
-		<init ref="id6"/>
+		<init ref="id7"/>
 		<transition>
-			<source ref="id6"/>
-			<target ref="id7"/>
+			<source ref="id7"/>
+			<target ref="id8"/>
 			<label kind="synchronisation" x="-977" y="-459">pods_channel[task_queue[0]]?</label>
 		</transition>
 	</template>
@@ -168,24 +209,24 @@ initialize_task_queue()</label>
 		<parameter>int H</parameter>
 		<declaration>// Place local declarations here.
 clock t;</declaration>
-		<location id="id8" x="-850" y="-314">
+		<location id="id9" x="-850" y="-314">
 			<name x="-860" y="-348">idle</name>
 		</location>
-		<location id="id9" x="-518" y="-314">
+		<location id="id10" x="-518" y="-314">
 			<name x="-561" y="-357">pick_up_item</name>
 		</location>
-		<init ref="id8"/>
+		<init ref="id9"/>
 		<transition>
-			<source ref="id9"/>
-			<target ref="id8"/>
+			<source ref="id10"/>
+			<target ref="id9"/>
 			<label kind="guard" x="-705" y="-408">t==H</label>
-			<label kind="synchronisation" x="-731" y="-391">release_pod!</label>
+			<label kind="synchronisation" x="-731" y="-391">release_item!</label>
 			<nail x="-688" y="-374"/>
 		</transition>
 		<transition>
-			<source ref="id8"/>
-			<target ref="id9"/>
-			<label kind="synchronisation" x="-722" y="-229">take_pod?</label>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="-722" y="-229">take_item?</label>
 			<label kind="assignment" x="-697" y="-212">t=0</label>
 			<nail x="-688" y="-238"/>
 		</transition>
