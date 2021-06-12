@@ -43,7 +43,7 @@ chan pods_channel[PODS_N];
 
 // Channels which synchronize when the human takes the item and the robot gives the item.
 chan take_item;
-chan release_item;
+chan release_robot;
 
 chan pod_position_saved;
 
@@ -234,120 +234,395 @@ initialize_task_queue()</label>
 		<parameter>int K</parameter>
 		<declaration>clock t;
 
+const int ALONE = 0;
+const int CARRYING_POD = 1;
+
+int robot_status = ALONE;
+
 // Current robot position
 int robot_position[2] = {entryPoint[0], entryPoint[1]};
 
-// Current task's pod position
-int pod_position[2];</declaration>
+// Current task's pod
+int pod_id = -1;
+
+bool cell_available(int x_coordinate, int y_coordinate) {
+
+    if (robot_status == ALONE)
+        return  x_coordinate &gt;= 0 &amp;&amp; x_coordinate &lt; N &amp;&amp; y_coordinate &gt;= 0 &amp;&amp; y_coordinate &lt; M &amp;&amp;
+                (grid[x_coordinate][y_coordinate] == EMPTY || grid[x_coordinate][y_coordinate] ==  POD);
+
+    if (robot_status == CARRYING_POD)
+        return  x_coordinate &gt;= 0 &amp;&amp; x_coordinate &lt; N &amp;&amp; y_coordinate &gt;= 0 &amp;&amp; y_coordinate &lt; M &amp;&amp;
+                grid[x_coordinate][y_coordinate] == EMPTY;
+
+    return false;
+}
+
+void move(int x_target, int y_target){
+
+    const int TARG_X = x_target;
+    const int TARG_Y = y_target;
+
+    const int INIT_ROBOT_X = robot_position[0];
+    const int INIT_ROBOT_Y = robot_position[1];
+
+    // The increments can't be both to 0, because in that case the state has already changed
+    int incr_x = 0;    // don't move
+    int incr_y = 0;    // don't move
+
+    int previous_cell;
+    int current_cell;
+
+    if (TARG_X &gt; INIT_ROBOT_X)
+        incr_x = 1;    // move to the right
+    else if (TARG_X &lt; INIT_ROBOT_X)
+        incr_x = -1;   // move to the left
+
+    
+    if (TARG_Y &gt; INIT_ROBOT_Y)
+        incr_y = 1;    // move to the bottom
+    else if (TARG_Y &lt; INIT_ROBOT_Y)
+        incr_y = -1;   // move to the top
+
+
+    // If incr_x is 0, the cell appears not available and the if is ignored
+    if (cell_available(INIT_ROBOT_X + incr_x, INIT_ROBOT_Y)) {
+        robot_position[0] = INIT_ROBOT_X + incr_x;
+    }
+    // If incr_y is 0, the cell appears not available and the if is ignored
+    else if (cell_available(INIT_ROBOT_Y, INIT_ROBOT_Y + incr_y)) {
+        robot_position[1] = INIT_ROBOT_Y + incr_y;
+    }
+    // If both the directions are occupied, you check where and if you can move
+    else {
+
+        // If both increments are valid, you simply try to move back in one of the two directions
+        if (incr_x != 0 &amp;&amp; incr_y != 0) {
+            if (cell_available(INIT_ROBOT_X - incr_x, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X - incr_x;
+            else if (cell_available(INIT_ROBOT_Y, INIT_ROBOT_Y - incr_y))
+                robot_position[1] = INIT_ROBOT_Y - incr_y;
+        }
+
+        // If incr_x==0, it means that you blocked in the y direction, and so it's natural try moving perpendicular (x+1 or x-1)
+        // If you can't move perpendicular, you try to move back
+        else if (incr_x==0) {
+            if (cell_available(INIT_ROBOT_X + 1, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X + 1;
+            else if (cell_available(INIT_ROBOT_X -1, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X - 1;
+
+            else if (cell_available(INIT_ROBOT_X, INIT_ROBOT_Y - incr_y))
+                robot_position[1] = INIT_ROBOT_Y - incr_y;
+        }
+
+        // If incr_y==0, it means that you blocked in the x direction, and so it's natural try moving perpendicular (y+1 or y-1)
+        // If you can't move perpendicular, you try to move back
+        else if (incr_y==0) {
+            if (cell_available(INIT_ROBOT_X, INIT_ROBOT_Y + 1))
+                robot_position[1] = INIT_ROBOT_Y + 1;
+            else if (cell_available(INIT_ROBOT_X, INIT_ROBOT_Y - 1))
+                robot_position[1] = INIT_ROBOT_Y - 1;
+
+            else if (cell_available(INIT_ROBOT_X - incr_x, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X - incr_x;
+        }
+    }
+    
+
+    previous_cell = grid[INIT_ROBOT_X][INIT_ROBOT_Y];
+    current_cell = grid[robot_position[0]][robot_position[1]];
+
+    // The robot can't move
+    if (previous_cell == current_cell)
+        return;
+
+    if (robot_status != CARRYING_POD) {
+        // Depending on what was the previous position's status, it changes because the robot leaves the cell
+        if (previous_cell == ROBOT)     previous_cell = EMPTY;
+        else if (previous_cell == POD_AND_ROBOT)    previous_cell = POD;
+
+        // Depending of what was the current position's status, it changes because the robot enters the cell
+        if (current_cell == EMPTY)  current_cell = ROBOT;
+        else if (current_cell == POD)   current_cell = POD_AND_ROBOT;
+    }
+    else {
+        // Previous cell always empty
+        previous_cell = EMPTY;
+
+        // The robot is carrying the pod
+        current_cell = POD_AND_ROBOT;
+    }
+
+    return;
+
+
+
+    // Se la x del pod è maggiore della x del robot, allora la direzione preferita è verso la x maggiore, altrimenti:
+        // Se è il contrario, la preferita è verso al x minore
+        // Se sono uguali, non c'è una direzione preferita
+    // Se la y del pod è maggiore della y del robot, allora la direzione preferita è verso la y maggiore, altrimenti:
+        // Se è il contrario, la preferita è verso al y minore
+        // Se sono uguali, non c'è una direzione preferita
+
+    // Se x ha una direzione preferita, vai verso la x, altrimenti:
+        // Se y ha una direzione preferita, vai verso la y, altrimenti sei già nella posizione preferita (ma in quel caso cambi proprio stato)
+
+    // Sempre considerando qualsiasi direzione preferita:
+        // Se la direzione è occupata (tu hai un pod e c'è un pod oppure c'è un robot), passa all'altra direzione preferita
+        // Se anche l'altra direzione preferita è occupata, prova a muoverti perpendicolarmente prima a dx poi a sx
+        // Se è ancora occupato, prova a muoverti indietro
+        // Se è occupato, non muoverti
+
+    
+}
+
+void leave_entry_point(int x_target, int y_target) {
+    
+    const int TARG_X = x_target;
+    const int TARG_Y = y_target;
+
+    const int INIT_ROBOT_X = robot_position[0];
+    const int INIT_ROBOT_Y = robot_position[1];
+
+    // The increments can't be both to 0, because in that case the state has already changed
+    int incr_x = 0;    // don't move
+    int incr_y = 0;    // don't move
+
+    int previous_cell;
+    int current_cell;
+
+    if (TARG_X &gt; INIT_ROBOT_X)
+        incr_x = 1;    // move to the right
+    else if (TARG_X &lt; INIT_ROBOT_X)
+        incr_x = -1;   // move to the left
+    else if (INIT_ROBOT_X == entryPoint[0] &amp;&amp; INIT_ROBOT_Y == entryPoint[1]) {    // If it's in the entry point and it is the first move
+        if (INIT_ROBOT_X &lt; N-1)   incr_x = 1;
+        else    incr_x = -1;
+    }
+
+    
+    if (TARG_Y &gt; INIT_ROBOT_Y)
+        incr_y = 1;    // move to the bottom
+    else if (TARG_Y &lt; INIT_ROBOT_Y)
+        incr_y = -1;   // move to the top
+    else if (INIT_ROBOT_X == entryPoint[0] &amp;&amp; INIT_ROBOT_Y == entryPoint[1]) {    // If it's in the entry point and it is the first move
+        if (INIT_ROBOT_Y &lt; M-1)   incr_y = 1;
+        else    incr_y = -1;
+    }
+
+
+    // If incr_x is 0, the cell appears not available and the if is ignored
+    if (cell_available(INIT_ROBOT_X + incr_x, INIT_ROBOT_Y)) {
+        robot_position[0] = INIT_ROBOT_X + incr_x;
+    }
+    // If incr_y is 0, the cell appears not available and the if is ignored
+    else if (cell_available(INIT_ROBOT_Y, INIT_ROBOT_Y + incr_y)) {
+        robot_position[1] = INIT_ROBOT_Y + incr_y;
+    }
+    // If both the directions are occupied, you check where and if you can move
+    else {
+
+        // If both increments are valid, you simply try to move back in one of the two directions
+        if (incr_x != 0 &amp;&amp; incr_y != 0) {
+            if (cell_available(INIT_ROBOT_X - incr_x, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X - incr_x;
+            else if (cell_available(INIT_ROBOT_Y, INIT_ROBOT_Y - incr_y))
+                robot_position[1] = INIT_ROBOT_Y - incr_y;
+        }
+
+        // If incr_x==0, it means that you blocked in the y direction, and so it's natural try moving perpendicular (x+1 or x-1)
+        // If you can't move perpendicular, you try to move back
+        else if (incr_x==0) {
+            if (cell_available(INIT_ROBOT_X + 1, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X + 1;
+            else if (cell_available(INIT_ROBOT_X -1, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X - 1;
+
+            else if (cell_available(INIT_ROBOT_X, INIT_ROBOT_Y - incr_y))
+                robot_position[1] = INIT_ROBOT_Y - incr_y;
+        }
+
+        // If incr_y==0, it means that you blocked in the x direction, and so it's natural try moving perpendicular (y+1 or y-1)
+        // If you can't move perpendicular, you try to move back
+        else if (incr_y==0) {
+            if (cell_available(INIT_ROBOT_X, INIT_ROBOT_Y + 1))
+                robot_position[1] = INIT_ROBOT_Y + 1;
+            else if (cell_available(INIT_ROBOT_X, INIT_ROBOT_Y - 1))
+                robot_position[1] = INIT_ROBOT_Y - 1;
+
+            else if (cell_available(INIT_ROBOT_X - incr_x, INIT_ROBOT_Y))
+                robot_position[0] = INIT_ROBOT_X - incr_x;
+        }
+    }
+    
+
+    previous_cell = grid[INIT_ROBOT_X][INIT_ROBOT_Y];
+    current_cell = grid[robot_position[0]][robot_position[1]];
+
+    // Depending of what was the current position's status, it changes because the robot enters the cell
+    if (current_cell == EMPTY)  current_cell = ROBOT;
+    else if (current_cell == POD)   current_cell = POD_AND_ROBOT;
+
+    return;
+}
+
+bool check_leave_entry() {
+    const int INIT_ROBOT_X = robot_position[0];
+    const int INIT_ROBOT_Y = robot_position[1];
+
+    return  cell_available(INIT_ROBOT_X+1, INIT_ROBOT_Y) ||
+            cell_available(INIT_ROBOT_X, INIT_ROBOT_Y+1) ||
+            cell_available(INIT_ROBOT_X-1, INIT_ROBOT_Y) ||
+            cell_available(INIT_ROBOT_X, INIT_ROBOT_X-1);
+}
+
+
+// The robot goes back to the entry point without considering the presence of other robots.
+// Even if there is a robot fulfilling a task on the entry point cell, the robot that needs to go back to idle, goes back to idle.
+void go_back_to_start() {
+    const int INIT_ROBOT_X = robot_position[0];
+    const int INIT_ROBOT_Y = robot_position[1];
+
+    int previous_cell = grid[INIT_ROBOT_X][INIT_ROBOT_Y];
+
+    robot_position[0] = entryPoint[0];
+    robot_position[1] = entryPoint[1];
+
+    // Depending on what was the previous position's status, it changes because the robot leaves the cell
+    if (previous_cell == ROBOT)     previous_cell = EMPTY;
+    else if (previous_cell == POD_AND_ROBOT)    previous_cell = POD;
+}
+
+bool check_if_near_to_start() {
+    const int INIT_ROBOT_X = robot_position[0];
+    const int INIT_ROBOT_Y = robot_position[1];
+
+    return  robot_position[0] == INIT_ROBOT_X+1 &amp;&amp; robot_position[1] == INIT_ROBOT_Y ||
+            robot_position[0] == INIT_ROBOT_X-1 &amp;&amp; robot_position[1] == INIT_ROBOT_Y ||
+            robot_position[0] == INIT_ROBOT_X &amp;&amp; robot_position[1] == INIT_ROBOT_Y+1 ||
+            robot_position[0] == INIT_ROBOT_X &amp;&amp; robot_position[1] == INIT_ROBOT_Y-1;
+}</declaration>
 		<location id="id6" x="-2108" y="-1963">
 			<name x="-2118" y="-1997">Idle</name>
 		</location>
 		<location id="id7" x="-1675" y="-1963">
-			<name x="-1768" y="-1997">Pod_position_saved</name>
+			<name x="-1759" y="-1946">Pod_position_saved</name>
+			<label kind="invariant" x="-1708" y="-1929">t &lt;= K</label>
 		</location>
 		<location id="id8" x="-1147" y="-1904">
-			<name x="-1181" y="-1938">Pick_pod</name>
+			<name x="-1173" y="-1946">Go_to_delivery</name>
+			<label kind="invariant" x="-1232" y="-1912">t &lt;= K</label>
 		</location>
-		<location id="id9" x="-790" y="-1904">
-			<name x="-833" y="-1938">Go_to_delivery</name>
+		<location id="id9" x="-901" y="-1725">
+			<name x="-867" y="-1725">Release_item</name>
 		</location>
-		<location id="id10" x="-790" y="-1657">
-			<name x="-756" y="-1657">Release_item</name>
-		</location>
-		<location id="id11" x="-1139" y="-1657">
+		<location id="id10" x="-1139" y="-1657">
 			<name x="-1181" y="-1632">Wait_human</name>
 		</location>
-		<location id="id12" x="-1428" y="-1657">
-			<name x="-1487" y="-1708">Go_back_to_pod</name>
+		<location id="id11" x="-1428" y="-1657">
+			<name x="-1487" y="-1640">Go_back_to_pod</name>
+			<label kind="invariant" x="-1453" y="-1615">t &lt;= K</label>
 		</location>
-		<location id="id13" x="-1725" y="-1657">
-			<name x="-1759" y="-1632">Release_pod</name>
+		<location id="id12" x="-2108" y="-1657">
+			<name x="-2244" y="-1683">Go_back_to_start</name>
+			<label kind="invariant" x="-2176" y="-1657">t &lt;= K</label>
 		</location>
-		<location id="id14" x="-1972" y="-1657">
-			<name x="-2014" y="-1640">Go_to_start</name>
-		</location>
-		<location id="id15" x="-1411" y="-2031">
-			<name x="-1421" y="-2065">Go_to_pod</name>
+		<location id="id13" x="-1411" y="-2048">
+			<name x="-1453" y="-2031">Go_to_pod</name>
+			<label kind="invariant" x="-1436" y="-2014">t &lt;= K</label>
 		</location>
 		<init ref="id6"/>
 		<transition>
-			<source ref="id15"/>
-			<target ref="id8"/>
-			<label kind="guard" x="-1317" y="-2014">if next == pod</label>
-		</transition>
-		<transition>
-			<source ref="id7"/>
-			<target ref="id15"/>
-			<label kind="synchronisation" x="-1606" y="-1972">pod_position_saved!</label>
-		</transition>
-		<transition>
-			<source ref="id14"/>
+			<source ref="id12"/>
 			<target ref="id6"/>
-			<label kind="guard" x="-1938" y="-1793">if next_position == starting_point</label>
-			<label kind="assignment" x="-1921" y="-1768">update_position</label>
-		</transition>
-		<transition>
-			<source ref="id14"/>
-			<target ref="id14"/>
-			<label kind="guard" x="-2184" y="-1734">check_neighborood</label>
-			<label kind="assignment" x="-2167" y="-1717">update_position</label>
-			<nail x="-2031" y="-1751"/>
-			<nail x="-2074" y="-1657"/>
-		</transition>
-		<transition>
-			<source ref="id13"/>
-			<target ref="id14"/>
-			<label kind="assignment" x="-1904" y="-1649">update_position</label>
-		</transition>
-		<transition>
-			<source ref="id12"/>
-			<target ref="id13"/>
-			<label kind="guard" x="-1657" y="-1649">if next_position == pod</label>
-			<label kind="assignment" x="-1700" y="-1683">update_position, update_pod_status</label>
+			<label kind="guard" x="-2099" y="-1844">check_if_near_to_start() &amp;&amp; t==K</label>
+			<label kind="assignment" x="-2099" y="-1819">go_back_to_start()</label>
 		</transition>
 		<transition>
 			<source ref="id12"/>
 			<target ref="id12"/>
-			<label kind="guard" x="-1479" y="-1547">check_neighborood</label>
-			<label kind="assignment" x="-1471" y="-1530">update_position</label>
-			<nail x="-1479" y="-1564"/>
-			<nail x="-1369" y="-1564"/>
-		</transition>
-		<transition>
-			<source ref="id11"/>
-			<target ref="id12"/>
-			<label kind="synchronisation" x="-1334" y="-1649">release_item?</label>
-		</transition>
-		<transition>
-			<source ref="id10"/>
-			<target ref="id11"/>
-			<label kind="synchronisation" x="-1003" y="-1640">take_item!</label>
-		</transition>
-		<transition>
-			<source ref="id9"/>
-			<target ref="id9"/>
-			<label kind="guard" x="-654" y="-1887">check_neighborood</label>
-			<label kind="assignment" x="-637" y="-1861">update_position</label>
-			<nail x="-671" y="-1904"/>
-			<nail x="-671" y="-1810"/>
-		</transition>
-		<transition>
-			<source ref="id9"/>
-			<target ref="id10"/>
-			<label kind="guard" x="-782" y="-1785">if next_position == delivery</label>
-			<label kind="assignment" x="-773" y="-1759">update_position</label>
+			<label kind="guard" x="-2227" y="-1564">!check_if_near_to_start() &amp;&amp; t==K</label>
+			<label kind="assignment" x="-2244" y="-1547">move(entryPoint[0], entryPoint[1]), t=0</label>
+			<nail x="-2185" y="-1572"/>
+			<nail x="-2032" y="-1572"/>
 		</transition>
 		<transition>
 			<source ref="id8"/>
 			<target ref="id9"/>
-			<label kind="assignment" x="-1028" y="-1895">update_position</label>
+			<label kind="guard" x="-1011" y="-1853">robot_position[0] == deliveryPoint[0] &amp;&amp;
+robot_position[1] == deliveryPoint[1]</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-1037" y="-1989">robot_position[0] != deliveryPoint[0] &amp;&amp;
+robot_position[1] != deliveryPoint[1] &amp;&amp; t==K</label>
+			<label kind="assignment" x="-1028" y="-1955">t = 0,
+move(deliveryPoint[0], deliveryPoint[1])</label>
+			<nail x="-1038" y="-1938"/>
+			<nail x="-1038" y="-1912"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-1734" y="-2031">check_leave_entry() &amp;&amp; t == K</label>
+			<label kind="synchronisation" x="-1683" y="-2082">pod_position_saved!</label>
+			<label kind="assignment" x="-1827" y="-2057">leave_entry_point(pods[pod_id][0], pods[pod_id][1]),
+t = 0</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-1504" y="-2201">t == K &amp;&amp;
+(robot_position[0] != pods[pod_id][0] || 
+robot_position[1] != pods[pod_id][1])</label>
+			<label kind="assignment" x="-1547" y="-2159">t = 0,
+move(pods[pod_id][0], pods[pod_id][1])</label>
+			<nail x="-1495" y="-2116"/>
+			<nail x="-1342" y="-2116"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-1326" y="-2040">robot_position[0] == pods[pod_id][0] &amp;&amp;
+robot_position[1] == pods[pod_id][1] &amp;&amp; t&lt;K</label>
+			<label kind="assignment" x="-1283" y="-2006">robot_status = CARRYING_POD</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-1929" y="-1734">robot_position[0] == pods[pod_id][0] &amp;&amp;
+robot_position[1] == pods[pod_id][1] &amp;&amp; t&lt;K</label>
+			<label kind="assignment" x="-1895" y="-1683">robot_status != CARRYING_POD</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-1555" y="-1844">t == K &amp;&amp;
+(robot_position[0] != pods[pod_id][0] || 
+robot_position[1] != pods[pod_id][1])</label>
+			<label kind="assignment" x="-1555" y="-1785">t = 0,
+move(pods[pod_id][0], pods[pod_id][1])</label>
+			<nail x="-1487" y="-1742"/>
+			<nail x="-1377" y="-1742"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-1334" y="-1649">release_robot?</label>
+			<label kind="assignment" x="-1300" y="-1632">t = 0</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="-1045" y="-1674">take_item!</label>
 		</transition>
 		<transition>
 			<source ref="id6"/>
 			<target ref="id7"/>
 			<label kind="synchronisation" x="-2023" y="-1989">pods_channel[task_queue[0]]!</label>
-			<label kind="assignment" x="-2040" y="-1946">pod_position[0] = pods[task_queue[0]][0],
-pod_position[1] = pods[task_queue[0]][1],
+			<label kind="assignment" x="-1997" y="-1955">pod_id = task_queue[0],
 t = 0</label>
 		</transition>
 	</template>
@@ -356,23 +631,24 @@ t = 0</label>
 		<parameter>int H</parameter>
 		<declaration>// Place local declarations here.
 clock t;</declaration>
-		<location id="id16" x="-850" y="-314">
+		<location id="id14" x="-850" y="-314">
 			<name x="-860" y="-348">idle</name>
 		</location>
-		<location id="id17" x="-518" y="-314">
+		<location id="id15" x="-518" y="-314">
 			<name x="-561" y="-357">pick_up_item</name>
+			<label kind="invariant" x="-544" y="-289">t &lt;= H</label>
 		</location>
-		<init ref="id16"/>
+		<init ref="id14"/>
 		<transition>
-			<source ref="id17"/>
-			<target ref="id16"/>
+			<source ref="id15"/>
+			<target ref="id14"/>
 			<label kind="guard" x="-705" y="-408">t==H</label>
-			<label kind="synchronisation" x="-731" y="-391">release_item!</label>
+			<label kind="synchronisation" x="-731" y="-391">release_robot!</label>
 			<nail x="-688" y="-374"/>
 		</transition>
 		<transition>
-			<source ref="id16"/>
-			<target ref="id17"/>
+			<source ref="id14"/>
+			<target ref="id15"/>
 			<label kind="synchronisation" x="-722" y="-229">take_item?</label>
 			<label kind="assignment" x="-697" y="-212">t=0</label>
 			<nail x="-688" y="-238"/>
