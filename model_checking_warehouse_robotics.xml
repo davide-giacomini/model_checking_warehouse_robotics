@@ -235,9 +235,16 @@ int robot_position[2] = {entryPoint[0], entryPoint[1]};
 // Current task's pod
 int pod_id = -1;
 
+// Cell's coordinates at previous position, used to avoid moving back and forth
+int saved_cell[2] = {entryPoint[0], entryPoint[1]};
 
 int manhattan_distance(int x_source, int y_source, int x_dest, int y_dest){
 	return abs(x_source - x_dest) + abs(y_source - y_dest);
+}
+
+
+bool is_on_entry(){
+	return robot_position[0] == entryPoint[0] &amp;&amp; robot_position[1] == entryPoint[1];
 }
 
 
@@ -252,14 +259,18 @@ bool is_on_delivery(){
 
 
 bool cell_available(int x_coordinate, int y_coordinate, bool allowedEntry) {
-	bool is_entry_point = (x_coordinate == entryPoint[0] &amp;&amp; y_coordinate == entryPoint[1]) || allowedEntry;
-    if (robot_status == ALONE)
-        return  x_coordinate &gt;= 0 &amp;&amp; x_coordinate &lt; N &amp;&amp; y_coordinate &gt;= 0 &amp;&amp; y_coordinate &lt; M &amp;&amp;
-                (grid[x_coordinate][y_coordinate] == EMPTY || grid[x_coordinate][y_coordinate] ==  POD) &amp;&amp; !is_entry_point;
+	bool is_entry_point = (x_coordinate == entryPoint[0] &amp;&amp; y_coordinate == entryPoint[1]);
+	if (!is_entry_point){
+	    if (robot_status == ALONE)
+	        return  x_coordinate &gt;= 0 &amp;&amp; x_coordinate &lt; N &amp;&amp; y_coordinate &gt;= 0 &amp;&amp; y_coordinate &lt; M &amp;&amp;
+	                (grid[x_coordinate][y_coordinate] == EMPTY || grid[x_coordinate][y_coordinate] ==  POD);
 
-    if (robot_status == CARRYING_POD)
-        return  x_coordinate &gt;= 0 &amp;&amp; x_coordinate &lt; N &amp;&amp; y_coordinate &gt;= 0 &amp;&amp; y_coordinate &lt; M &amp;&amp;
-                grid[x_coordinate][y_coordinate] == EMPTY &amp;&amp; !is_entry_point;
+	    if (robot_status == CARRYING_POD)
+	        return  x_coordinate &gt;= 0 &amp;&amp; x_coordinate &lt; N &amp;&amp; y_coordinate &gt;= 0 &amp;&amp; y_coordinate &lt; M &amp;&amp;
+	                grid[x_coordinate][y_coordinate] == EMPTY;
+	} else{
+		return allowedEntry;
+	}
 
     return false;
 }
@@ -283,12 +294,25 @@ void move_to(int x_dest, int y_dest, bool allowedEntry){
 			if ((i == 0 || j == 0) &amp;&amp; (i != 0 || j != 0)){ // the robot cannot move diagonally
 				temp_distance = manhattan_distance(x_robot + i, y_robot + j, x_dest, y_dest);
 				if (cell_available(x_robot + i, y_robot + j, allowedEntry) &amp;&amp; temp_distance &lt; minimum_distance){
-					minimum_distance = temp_distance;
-					movement_direction[0] = i;
-					movement_direction[1] = j;
+					if (saved_cell[0] != x_robot + i || saved_cell[1] != y_robot + j){
+						minimum_distance = temp_distance;
+						movement_direction[0] = i;
+						movement_direction[1] = j;
+					}
 				}
 			}
 		}
+	}
+
+	if (movement_direction[0] == 0 &amp;&amp; movement_direction[1] == 0 &amp;&amp; cell_available(saved_cell[0], saved_cell[1], allowedEntry)){
+		movement_direction[0] = saved_cell[0] - x_robot;
+		movement_direction[1] = saved_cell[1] - y_robot;
+	}
+
+	// If the robot is moving, the previous cell is saved
+	if (movement_direction[0] != 0 || movement_direction[1] != 0){
+		saved_cell[0] = x_robot;
+		saved_cell[1] = y_robot;
 	}
 
 	previous_cell = grid[x_robot][y_robot];
@@ -297,7 +321,7 @@ void move_to(int x_dest, int y_dest, bool allowedEntry){
     robot_position[0] = x_robot + movement_direction[0];
     robot_position[1] = y_robot + movement_direction[1];
     // The robot can't move
-    if (previous_cell == current_cell)
+    if (movement_direction[0] == 0 &amp;&amp; movement_direction[1] == 0)
         return;
 
     if (robot_status != CARRYING_POD) {
@@ -315,13 +339,19 @@ void move_to(int x_dest, int y_dest, bool allowedEntry){
         current_cell = POD_AND_ROBOT;
     }
 
+	grid[x_robot][y_robot] = previous_cell;
+
+	if(x_robot + movement_direction[0] != entryPoint[0] || y_robot + movement_direction[1] != entryPoint[1]){
+		grid[x_robot + movement_direction[0]][y_robot + movement_direction[1]] = current_cell;
+	}
+
     return;
 }
 
 void go_to_pod(){
 	int x_pod = pods[pod_id][0];
 	int y_pod = pods[pod_id][1];
-    move_to(x_pod, y_pod, false);
+    	move_to(x_pod, y_pod, false);
     return;
 }
 
@@ -331,9 +361,12 @@ void go_to_delivery(){
 }
 
 void go_to_entry(){
+	if (is_on_entry())
+		return;
     move_to(entryPoint[0], entryPoint[1], true);
     return;
-}</declaration>
+}
+</declaration>
 		<location id="id5" x="-629" y="-187">
 			<name x="-639" y="-221">start</name>
 			<label kind="invariant" x="-646" y="-170">t &lt;= K</label>
@@ -413,9 +446,9 @@ void go_to_entry(){
 		<transition>
 			<source ref="id5"/>
 			<target ref="id6"/>
-			<label kind="guard" x="-620" y="-323">current_length_queue &gt; 0</label>
-			<label kind="synchronisation" x="-646" y="-297">pods_channel[task_queue[0]]!</label>
-			<label kind="assignment" x="-629" y="-280">t=0, pod_id = task_queue[0]</label>
+			<label kind="guard" x="-688" y="-323">current_length_queue &gt; 0 &amp;&amp; is_on_entry()</label>
+			<label kind="synchronisation" x="-637" y="-306">pods_channel[task_queue[0]]!</label>
+			<label kind="assignment" x="-629" y="-289">t=0, pod_id = task_queue[0]</label>
 		</transition>
 	</template>
 	<template>
@@ -455,10 +488,12 @@ const int K = 2;
 // Place template instantiations here.
 human = Human(H);
 task_queue_process = Task_Queue(T);
-robot = Robot(K);
+robotA = Robot(K);
+robotB = Robot(K);
+robotC = Robot(K);
 
 // List one or more processes to be composed into a system.
-system human, task_queue_process, robot;</system>
+system human, task_queue_process, robotA, robotB, robotC;</system>
 	<queries>
 		<query>
 			<formula></formula>
