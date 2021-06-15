@@ -18,7 +18,7 @@ const int POD_FREE = 0;
 const int POD_OCCUPIED = 1;
 
 // Max number of tasks
-const int MAX_T = 10;
+const int MAX_T = 20;
 
 // Number of pods
 const int PODS_N = N*M - (N/2)*M - (N/2 + N%2)*4;
@@ -91,7 +91,7 @@ int free_pods_number() {
 
     int pod_id;
 
-    for (pod_id = 0; pod_id&lt;N; pod_id++) {
+    for (pod_id = 0; pod_id&lt;PODS_N; pod_id++) {
         if (pods[pod_id][2] == POD_FREE) {
             number++;
         }
@@ -111,7 +111,7 @@ void add_task(int id) {
     
     while (id_pod&lt;PODS_N &amp;&amp; !pod_found) {
 
-        if (pods[id_pod][2] = POD_FREE) {
+        if (pods[id_pod][2] == POD_FREE) {
 
             if (count_id_rel == id_pod_relative)
                 pod_found = true;
@@ -157,6 +157,7 @@ bool pod_available(int id_pod) {
 </declaration>
 		<location id="id0" x="-714" y="0">
 			<name x="-724" y="-34">start</name>
+			<label kind="invariant" x="-724" y="17">t &lt;= 0</label>
 		</location>
 		<location id="id1" x="-323" y="0">
 			<name x="-365" y="-42">task_generation</name>
@@ -202,7 +203,7 @@ bool pod_available(int id_pod) {
 		<transition>
 			<source ref="id1"/>
 			<target ref="id1"/>
-			<label kind="select" x="-399" y="-221">id_pod_relative : int[0 , PODS_N]</label>
+			<label kind="select" x="-399" y="-221">id_pod_relative : int[0 , PODS_N-1]</label>
 			<label kind="guard" x="-399" y="-195">current_length_queue&lt;MAX_T
 &amp;&amp; t==T &amp;&amp; free_pods_number() &gt; 0</label>
 			<label kind="assignment" x="-416" y="-144">add_task(id_pod_relative),
@@ -289,8 +290,8 @@ void move_to(int x_dest, int y_dest, bool allowedEntry){
     int i, j;
     int temp_distance;
 
-	for (i = -1; i&lt;=1; i++){
-		for (j = -1; j&lt;=1; j++){
+	for (j = 1; j&gt;=-1; j--){
+		for (i = 1; i&gt;=-1; i--){
 			if ((i == 0 || j == 0) &amp;&amp; (i != 0 || j != 0)){ // the robot cannot move diagonally
 				temp_distance = manhattan_distance(x_robot + i, y_robot + j, x_dest, y_dest);
 				if (cell_available(x_robot + i, y_robot + j, allowedEntry) &amp;&amp; temp_distance &lt; minimum_distance){
@@ -432,7 +433,7 @@ void go_to_entry(){
 		<transition>
 			<source ref="id6"/>
 			<target ref="id7"/>
-			<label kind="guard" x="-212" y="-297">is_under_right_pod() &amp;&amp; t&lt;K</label>
+			<label kind="guard" x="-212" y="-297">is_under_right_pod() &amp;&amp; t&lt;=K</label>
 			<label kind="assignment" x="-229" y="-272">robot_status = CARRYING_POD</label>
 		</transition>
 		<transition>
@@ -496,8 +497,8 @@ robotC = Robot(K);
 system human, task_queue_process, robotA, robotB, robotC;</system>
 	<queries>
 		<query>
-			<formula></formula>
-			<comment></comment>
+			<formula>E&lt;&gt; task_queue_process.Error_maxSizeReached</formula>
+			<comment>E&lt;&gt; task_queue_process.Error_maxSizeReached</comment>
 		</query>
 	</queries>
 </nta>
