@@ -20,8 +20,17 @@ const int POD_OCCUPIED = 1;
 // Max number of tasks
 const int MAX_T = 20;
 
+// Upper bound for deterministic simulation purposes
+// const int SIM_MAX_T = 1 * MAX_T;
+
+// Overall count of tasks created (deterministic simulation purposes)
+// int total_tasks_number = 0;
+
 // Number of pods
 const int PODS_N = N*M - (N/2)*M - (N/2 + N%2)*4;
+
+// Invalid pod
+const int POD_ERR = 0;
 
 // This is the grid representing the map.
 int grid[N][M];
@@ -35,21 +44,34 @@ int pods[PODS_N][3];
 int current_length_queue = 0;
 int task_queue[MAX_T];
 
+
 // CHANNELS OF THE MODEL
 
 // Array of channels, where the id of the array corresponds to the pod_id, chosen unambigously during the intialization of the map.
-chan pods_channel[PODS_N];
+broadcast chan pods_channel[PODS_N];
 
 // Channels which synchronize when the human takes the item and the robot gives the item.
-chan human_pick_up;
-chan free_robot;
-
+urgent broadcast chan human_pick_up;
+broadcast chan free_robot;
 
 
 
 
 const int entryPoint[2] = {N-1,M-1};
 const int deliveryPoint[2] = {0,M-1};
+
+const double PI = 3.14159265358979323846;
+
+// Time bound for stochastic features
+const int TAU = 750;
+
+// Normal distribution functions for SMC extensions
+double stdNormal() {// N(0, 1)
+    return sqrt(-2*ln(1-random(1))) * cos(2*PI*random(1));
+}
+double Normal(double mean, double stdDev) {
+    return mean + stdDev * stdNormal();
+}
 
 //We want to be sure to initialize everything to zero
 void initialize_grid() {
@@ -79,8 +101,10 @@ void place_pods() {
 }</declaration>
 	<template>
 		<name>Task_Queue</name>
-		<parameter>int T</parameter>
+		<parameter>double m, double v</parameter>
 		<declaration>clock t;
+
+clock task_delay;
 
 // It returns the number of pods available in this instant.
 // It is used in the select of a random pod.
@@ -105,8 +129,8 @@ void add_task(int id) {
     int count_id_rel = 0;
 
     bool pod_found = false;
-    int id_pod=0;   
-
+    int id_pod=0;
+    
     while (id_pod&lt;PODS_N &amp;&amp; !pod_found) {
 
         if (pods[id_pod][2] == POD_FREE) {
@@ -135,7 +159,7 @@ void remove_task() {
         task_queue[i-1] = task_queue[i];
     }
 
-    task_queue[current_length_queue - 1] = -1;
+    task_queue[current_length_queue - 1] = POD_ERR;
     current_length_queue--;
 }
 
@@ -143,7 +167,7 @@ void initialize_task_queue() {
     int i;
 
     for (i=0; i&lt;MAX_T; i++) {
-        task_queue[i] = -1; // TODO
+        task_queue[i] = POD_ERR; // TODO
     }
 }
 
@@ -151,43 +175,45 @@ bool pod_available(int id_pod) {
     return pods[id_pod][2] == POD_FREE;
 }
 
-
-</declaration>
+// Add delay in creation of tasks (normal distribution)
+double compute_task_delay(){
+    return fabs(Normal(m, v));
+}</declaration>
 		<location id="id0" x="-714" y="0">
 			<name x="-724" y="-34">start</name>
 			<label kind="invariant" x="-724" y="17">t &lt;= 0</label>
 		</location>
 		<location id="id1" x="-323" y="0">
-			<name x="-348" y="-51">task_generation</name>
-			<label kind="invariant" x="-374" y="0">t &lt;= T</label>
+			<name x="-365" y="-42">task_generation</name>
+			<label kind="invariant" x="-561" y="17">t &lt;= task_delay &amp;&amp; task_delay'==0</label>
 		</location>
-		<location id="id2" x="-493" y="204">
-			<name x="-578" y="229">Err_podsUnavailable</name>
+		<location id="id2" x="-518" y="204">
+			<name x="-603" y="229">Err_podsUnavailable</name>
 		</location>
 		<location id="id3" x="-323" y="204">
-			<name x="-331" y="229">Error_maxSizeReached</name>
+			<name x="-374" y="229">Error_maxSizeReached</name>
 		</location>
 		<location id="id4" x="238" y="0">
 			<name x="228" y="-34">task_sent</name>
-			<label kind="invariant" x="228" y="17">t &lt;= T</label>
+			<label kind="invariant" x="212" y="17">t &lt;= task_delay &amp;&amp; task_delay'==0</label>
 		</location>
 		<init ref="id0"/>
 		<transition>
 			<source ref="id1"/>
 			<target ref="id2"/>
-			<label kind="guard" x="-705" y="110">current_length_queue&lt;MAX_T
-&amp;&amp; t==T &amp;&amp; free_pods_number()==0</label>
+			<label kind="guard" x="-730" y="144">current_length_queue&lt;MAX_T
+&amp;&amp; t==task_delay &amp;&amp; free_pods_number()==0</label>
 		</transition>
 		<transition>
 			<source ref="id1"/>
 			<target ref="id3"/>
-			<label kind="guard" x="-306" y="127">current_length_queue&gt;=MAX_T 
-&amp;&amp; t==T</label>
+			<label kind="guard" x="-416" y="136">current_length_queue&gt;=MAX_T 
+&amp;&amp; t==task_delay</label>
 		</transition>
 		<transition>
 			<source ref="id4"/>
 			<target ref="id1"/>
-			<label kind="guard" x="34" y="76">t &lt;= T</label>
+			<label kind="guard" x="0" y="76">t &lt;= task_delay</label>
 			<label kind="assignment" x="0" y="93">remove_task()</label>
 			<nail x="85" y="76"/>
 			<nail x="-204" y="76"/>
@@ -195,24 +221,25 @@ bool pod_available(int id_pod) {
 		<transition>
 			<source ref="id1"/>
 			<target ref="id4"/>
-			<label kind="guard" x="-153" y="-34">current_length_queue&gt;0 &amp;&amp; t&lt;=T</label>
+			<label kind="guard" x="-136" y="-42">current_length_queue&gt;0</label>
 			<label kind="synchronisation" x="-144" y="-59">pods_channel[task_queue[0]]?</label>
 		</transition>
 		<transition>
 			<source ref="id1"/>
 			<target ref="id1"/>
-			<label kind="select" x="-408" y="-195">id_pod_relative : int[0 , PODS_N-1]</label>
-			<label kind="guard" x="-408" y="-178">current_length_queue&lt;MAX_T
-&amp;&amp; t==T &amp;&amp; free_pods_number() &gt; 0</label>
-			<label kind="assignment" x="-382" y="-136">add_task(id_pod_relative),
-t = 0</label>
+			<label kind="select" x="-416" y="-204">id_pod_relative : int[0 , PODS_N-1]</label>
+			<label kind="guard" x="-416" y="-187">current_length_queue&lt;MAX_T
+&amp;&amp; t==task_delay &amp;&amp; free_pods_number() &gt; 0</label>
+			<label kind="assignment" x="-416" y="-127">add_task(id_pod_relative),
+t = 0, task_delay = compute_task_delay()</label>
 			<nail x="-373" y="-76"/>
 			<nail x="-280" y="-76"/>
 		</transition>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="assignment" x="-612" y="-85">t = 0,
+			<label kind="assignment" x="-663" y="-102">t = 0,
+task_delay = compute_task_delay(),
 initialize_grid(),
 place_pods(),
 initialize_task_queue()</label>
@@ -232,7 +259,7 @@ int robot_status = ALONE;
 int robot_position[2] = {entryPoint[0], entryPoint[1]};
 
 // Current task's pod
-int pod_id = -1;
+int pod_id = POD_ERR;
 
 // Cell's coordinates at previous position, used to avoid moving back and forth
 int saved_cell[2] = {entryPoint[0], entryPoint[1]};
@@ -366,9 +393,9 @@ void go_to_entry(){
     return;
 }
 </declaration>
-		<location id="id5" x="-697" y="-51">
-			<name x="-654" y="-85">start</name>
-			<label kind="invariant" x="-714" y="-34">t &lt;= K</label>
+		<location id="id5" x="-816" y="-51">
+			<name x="-826" y="-85">start</name>
+			<label kind="exponentialrate" x="-826" y="-17">1</label>
 		</location>
 		<location id="id6" x="-348" y="-297">
 			<name x="-391" y="-263">reaching_pod</name>
@@ -376,7 +403,7 @@ void go_to_entry(){
 		</location>
 		<location id="id7" x="-68" y="-178">
 			<name x="-102" y="-221">delivering</name>
-			<label kind="invariant" x="-246" y="-178">t &lt;= K || is_on_delivery()</label>
+			<label kind="invariant" x="-136" y="-178">t &lt;= K</label>
 		</location>
 		<location id="id8" x="-357" y="-51">
 			<name x="-391" y="-102">back_to_pod</name>
@@ -385,28 +412,12 @@ void go_to_entry(){
 		<location id="id9" x="-68" y="-51">
 			<name x="-42" y="-42">standby</name>
 		</location>
-		<location id="id10" x="-697" y="-298">
-			<name x="-671" y="-290">leaving_entry</name>
-			<label kind="exponentialrate" x="-756" y="-306">1:100</label>
-		</location>
 		<init ref="id5"/>
 		<transition>
 			<source ref="id9"/>
 			<target ref="id8"/>
-			<label kind="synchronisation" x="-221" y="-42">free_robot?</label>
-			<label kind="assignment" x="-204" y="-25">t = 0</label>
-		</transition>
-		<transition>
-			<source ref="id10"/>
-			<target ref="id6"/>
-			<label kind="assignment" x="-561" y="-331">t = 0</label>
-		</transition>
-		<transition>
-			<source ref="id5"/>
-			<target ref="id10"/>
-			<label kind="guard" x="-977" y="-212">is_on_entry() &amp;&amp; current_length_queue&gt;0</label>
-			<label kind="synchronisation" x="-943" y="-195">pods_channel[task_queue[0]]!</label>
-			<label kind="assignment" x="-943" y="-178">pod_id = task_queue[0], t=0</label>
+			<label kind="synchronisation" x="-238" y="-42">free_robot?</label>
+			<label kind="assignment" x="-221" y="-25">t = 0</label>
 		</transition>
 		<transition>
 			<source ref="id7"/>
@@ -417,16 +428,19 @@ void go_to_entry(){
 		<transition>
 			<source ref="id5"/>
 			<target ref="id5"/>
-			<label kind="guard" x="-1011" y="-85">t==K || current_length_queue == 0</label>
-			<label kind="assignment" x="-960" y="-68">go_to_entry(), t=0</label>
-			<nail x="-782" y="-17"/>
-			<nail x="-782" y="-102"/>
+			<label kind="guard" x="-1088" y="-76">current_length_queue &lt;= 0</label>
+			<label kind="assignment" x="-952" y="-34">t=0</label>
+			<nail x="-901" y="-17"/>
+			<nail x="-901" y="-102"/>
 		</transition>
 		<transition>
 			<source ref="id8"/>
 			<target ref="id5"/>
-			<label kind="guard" x="-603" y="-51">is_under_right_pod()</label>
-			<label kind="assignment" x="-629" y="-34">robot_status = ALONE, t=0</label>
+			<label kind="guard" x="-680" y="-42">is_under_right_pod()</label>
+			<label kind="assignment" x="-680" y="-25">robot_status = ALONE,
+pods[pod_id][2] = POD_FREE,
+pod_id = POD_ERR,
+t=0</label>
 		</transition>
 		<transition>
 			<source ref="id8"/>
@@ -458,70 +472,86 @@ void go_to_entry(){
 			<nail x="-390" y="-348"/>
 			<nail x="-297" y="-348"/>
 		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-731" y="-246">current_length_queue &gt; 0</label>
+			<label kind="synchronisation" x="-739" y="-229">pods_channel[task_queue[0]]!</label>
+			<label kind="assignment" x="-731" y="-212">t=0, pod_id = task_queue[0]</label>
+		</transition>
 	</template>
 	<template>
 		<name>Human</name>
-		<parameter>int H</parameter>
+		<parameter>double m, double v</parameter>
 		<declaration>// Place local declarations here.
 clock t;
 
-clock delay;
+clock human_delay;
 
-const double PI = 3.14159265358979323846;
-
-double stdNormal() {// N(0, 1)
-    return sqrt(-2*ln(1-random(1))) * cos(2*PI*random(1));
-}
-double Normal(double mean, double stdDev) {
-    return mean + stdDev * stdNormal();
-}
-
-double compute_delay(){
-    return Normal(0.5, 0.5);
+// Add delay in human action
+double compute_human_delay(){
+    return fabs(Normal(m, v));
 }</declaration>
-		<location id="id11" x="-297" y="-51">
+		<location id="id10" x="-297" y="-51">
 			<name x="-307" y="-85">idle</name>
 		</location>
-		<location id="id12" x="-34" y="-51">
+		<location id="id11" x="-34" y="-51">
 			<name x="-34" y="-85">pick_up_item</name>
-			<label kind="invariant" x="-44" y="-34">t &lt;= delay &amp;&amp; delay'==0</label>
+			<label kind="invariant" x="-44" y="-34">t &lt;= human_delay &amp;&amp; human_delay' == 0</label>
 		</location>
-		<init ref="id11"/>
+		<init ref="id10"/>
 		<transition>
-			<source ref="id12"/>
-			<target ref="id11"/>
-			<label kind="guard" x="-195" y="34">t == delay</label>
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="guard" x="-195" y="34">t == human_delay</label>
 			<label kind="synchronisation" x="-195" y="51">free_robot!</label>
-			<label kind="assignment" x="-204" y="68">t = 0, delay = 0</label>
+			<label kind="assignment" x="-195" y="68">t = 0</label>
 			<nail x="-85" y="25"/>
 			<nail x="-238" y="25"/>
 		</transition>
 		<transition>
-			<source ref="id11"/>
-			<target ref="id12"/>
-			<label kind="synchronisation" x="-212" y="-178">human_pick_up?</label>
-			<label kind="assignment" x="-297" y="-153">t = 0, delay = compute_delay()</label>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-212" y="-170">human_pick_up?</label>
+			<label kind="assignment" x="-255" y="-153">t = 0, human_delay = compute_human_delay()</label>
 			<nail x="-229" y="-127"/>
 			<nail x="-93" y="-127"/>
 		</transition>
 	</template>
-	<system>const int T = 5;
-const int H = 3;
+	<system>const double mT = 28.0;
+const double vT = 3.0;
+const double mH = 1.0;
+const double vH = 2.0;
 const int K = 2;
 
 // Place template instantiations here.
-human = Human(H);
-task_queue_process = Task_Queue(T);
+human = Human(mH, vH);
+task_queue_process = Task_Queue(mT, vT);
 robotA = Robot(K);
 robotB = Robot(K);
 robotC = Robot(K);
+robotD = Robot(K);
+robotE = Robot(K);
+robotF = Robot(K);
 
 // List one or more processes to be composed into a system.
-system human, task_queue_process, robotA, robotB, robotC;</system>
+system human, task_queue_process, robotA, robotB, robotC, robotD, robotE, robotF;</system>
 	<queries>
 		<query>
-			<formula>E&lt;&gt; task_queue_process.Error_maxSizeReached</formula>
-			<comment>E&lt;&gt; task_queue_process.Error_maxSizeReached</comment>
+			<formula>Pr[&lt;=TAU] (&lt;&gt; task_queue_process.Err_podsUnavailable)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=TAU] (&lt;&gt; human.pick_up_item)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate[&lt;=TAU; 10]{task_queue_process.task_sent*3}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=TAU] (&lt;&gt; task_queue_process.Error_maxSizeReached)</formula>
+			<comment></comment>
 		</query>
 	</queries>
 </nta>
