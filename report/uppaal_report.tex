@@ -1,0 +1,73 @@
+\documentclass[12pt,oneside,a4paper]{article}
+
+\usepackage[backend=biber,style=numeric]{biblatex}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+
+\pagestyle{headings}
+
+\title{Formal Methods for Concurrent and Real-Time Systems}
+\author{Giacomini Davide \and Giarduz Andrea \and Grosso Veronica}
+
+
+\begin{document}
+\begin{titlepage}
+\begin{center}
+        \vspace*{-1,5cm}
+		\includegraphics[width=5cm]{resources/logo.png}
+		
+        \LARGE{{\scshape Politecnico di Milano}}
+        
+        \LARGE{}
+        
+        \LARGE{2020/2021}
+        
+        \vspace*{1cm}
+        \Large{{\scshape Formal Methods for Concurrent and Real-Time Systems}}
+        
+        \vspace*{1cm}
+        \Huge{Model Checking of Warehouse Robotics}
+ 
+ 		\Large{\textbf{Homework Project Report}}
+        \vfill
+        
+        \vspace*{0,8cm}
+        \Large{Giacomini Davide\\
+        Giarduz Andrea\\
+        Grosso Veronica
+        }
+            
+        \vspace{1,2cm}
+           
+        \Large
+        Prof. San Pietro Pierluigi\\
+        Dr. Lestingi Livia
+    \end{center}
+\end{titlepage}
+
+\pagenumbering{Roman}
+\setcounter{tocdepth}{3}
+\tableofcontents
+
+\newpage
+
+\listoffigures
+\addcontentsline{toc}{section}{\listfigurename}
+\listoftables
+\addcontentsline{toc}{section}{\listtablename}
+
+\newpage
+\pagenumbering{arabic}
+
+\include{subfiles/high_level_model.tex}
+\include{subfiles/component.tex}
+\include{subfiles/properties.tex}
+\include{subfiles/exe_time_memory.tex}
+\include{subfiles/conclusion.tex}
+
+\end{document}

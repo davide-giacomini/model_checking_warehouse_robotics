@@ -1,0 +1,16 @@
+#ignore all kind of files
+*.aux
+*.log
+*.pdf
+*.gz
+*.toc
+*.dvi
+*.out
+*.lot
+*.lof
+*.bcf
+*.xml
+#except tex, PNG files
+#!*.tex
+#!*.PNG
+#!*/
