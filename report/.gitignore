@@ -10,6 +10,10 @@
 *.lof
 *.bcf
 *.xml
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
 #except tex, PNG files
 #!*.tex
 #!*.PNG
