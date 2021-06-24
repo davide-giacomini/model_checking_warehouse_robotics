@@ -541,18 +541,6 @@ system human, task_queue_process, robotA, robotB, robotC, robotD, robotE, robotF
 			<comment></comment>
 		</query>
 		<query>
-			<formula>Pr[&lt;=1000] (&lt;&gt; task_queue_process.start)</formula>
-			<comment></comment>
-		</query>
-		<query>
-			<formula>Pr[&lt;=TAU] (&lt;&gt; human.pick_up_item)</formula>
-			<comment></comment>
-		</query>
-		<query>
-			<formula>simulate[&lt;=TAU]{task_queue_process.task_sent*3}</formula>
-			<comment></comment>
-		</query>
-		<query>
 			<formula>Pr[&lt;=100] (&lt;&gt; task_queue_process.Error_maxSizeReached)</formula>
 			<comment></comment>
 		</query>
