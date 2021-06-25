@@ -13,8 +13,8 @@ Moreover, this section features the constants and, in a more general way, the re
 The grid layout is flexible and can be changed by setting the N, M values, the pods positions, as well as the entry and delivery points.\vspace{0,2cm}\\
 \textbf{Pods} & The pods id, position and status are saved in a matrix \texttt{pods[PODS\_N][3]}, where \texttt{PODS\_N} is the total number of pods. The first index is the pod id, while the second one contains the x and y coordinates and the pod status. The pods can either be free or assigned to a task. 
 
-This data structure allows to easily access both the position and status of pods by their id.\vspace{0,2cm}\\
-\textbf{Queue} & It is a FIFO array, of size \texttt{MAX\_T}, containing the pending tasks. The parameter \texttt{MAX\_T} represents the maximum queue size. Together with the \texttt{current\_length\_queue} variable, we could model a variable length queue, despite \UPPAAL \ not providing dynamic memory management. \vspace{0,2cm}\\
+This data structure allows an easy access to both the position and status of pods by their id.\vspace{0,2cm}\\
+\textbf{Queue} & It is a FIFO array, of size \texttt{MAX\_T}, containing the pending tasks. The parameter \texttt{MAX\_T} represents the maximum queue size. Together with the \texttt{current\_length\_queue} variable, it is possible to model a queue variable in length, despite \UPPAAL \ not providing dynamic memory management. \vspace{0,2cm}\\
 \end{tabularx}
 
 \subsection{Task Queue}
@@ -27,15 +27,26 @@ The Task Queue template models the generation and dispatching of tasks. Since th
 \texttt{task\_sent} & The timed automaton synchronizes with an idle robot on the first item of the task queue. It sends the information about the pod id, matched with the task, to the robot. After that, it removes the assigned task from the queue. This is useful because it avoids that multiple robots process the same task. \vspace{0,4cm}\\
 \multicolumn{2}{l}{{\scshape Error States}} \vspace{0,2cm}\\
 \texttt{Error\_maxSizeReached}  & This error state is reached when the task queue is full. The newly generated tasks would be lost, so the timed automaton stops its behaviour. \vspace{0,2cm}\\
-\texttt{Err\_podsUnavailable}   & The pods unavailable error state happens whenever the number of tasks overcomes the number of available pods. In particular, the new tasks cannot be associated with any pod, creating an undesired situation.  \vspace{0,2cm}\\
+\texttt{Err\_podsUnavailable}   & The pods unavailable error state happens whenever the number of tasks overcomes the number of available pods. In particular, the new tasks cannot be associated with any pod, creating an undesired situation. Naturally, for this to happen, \texttt{MAX\_T} $>$ \texttt{PODS\_N} must hold. \vspace{0,2cm}\\
 \end{tabularx}
 
 \subsection{Robots}
 The Robot template is the most complex component in the system, since it handles the task retrieval, the robot movement algorithm, the pod delivery and the returning of the pod to its original position.
-
 In order to do so, it synchronizes both with the Task Queue and the Human Operator. 
+
+The key feature in this automaton is that the states represent ongoing actions (e.g., reaching a pod, going to the delivery point, etc.), that are gradually executed with the self-loop transitions. This way, the model is kept as simple as possible, by avoiding to insert intermediate states. \\
+Transition between different states, on the other hand, are related to different phases of the robot activity (e.g., the pod has been delivered, so the destination of the robot changes). Thus, the model has a constant structure. 
+The idle position, \texttt{start}, features an exponential delay, which could represent a non-deterministic robot behaviour in the processing before taking a new task.
 
 \subsection{Human Operator}	
 The Human Operator is modelled as a two-state timed automaton, to make it as simple as possible. As soon as a robot arrives in the delivery point with a pod, it synchronizes with the operator. The human picks up the right item from the pod. It takes the human with a delay \texttt{human\_delay} modelled by a Normal Distribution. When the job is done, it notifies the robot that it is free to go. 
 
 \subsection{Design Choices}
+The main design choices and assumptions for this project can be summarized into four main areas:
+
+\begin{tabularx}{\textwidth}{lX}
+\textbf{Robot movement} & In order to keep the verification times short, while using an efficient movement algorithm, we chose to suppose to existence of a \textit{robot highway} on the right side of the map, containing the entry and delivery points. The algorithm works by preferring a tile with the minimum Manhattan distance to the destination. The choice of the Manhattan distance is due to the robot not being able to move diagonally. The preferred direction, at this point, is moving towards the \textit{robot highway}, hence the assumption on its existence. This way, robots are less prone to routing congestion. If possible, the robot tries not to move to the tile it previously occupied. This avoids starving conditions where two robots keep performing the same movements over and over again. Because of these design choices, the algorithm works best with horizontal alternated parallel lanes of pods. \vspace{0,2cm}\\
+\textbf{States number} & The target of the modelling phase for each template was to keep the number of states low, thus allowing a faster verification and a better readability. \vspace{0,2cm}\\
+\textbf{Channel policy} & The \UPPAAL \ SMC extension requires all channels to be \texttt{broadcast}. In our model, this is not a problem, since communication is ensured to be one-to-one. The only relevant point where this could have been an issue is the \texttt{free\_robot} channel, as the others have only one possible receiver (either the Task Queue or the Human Operator). In spite of this, only one robot can occupy the delivery point, hence only the rightful synchronization will be activated. \vspace{0,2cm}\\
+\textbf{New task selection} & A reduction of complexity also took place in the policy of new task selection. A number $n \in \left[0,\texttt{PODS\_N}\right] $ is randomly chosen by the tool. In order to find the first available pod, we compute $ m = n \mod \texttt{free\_pods\_number()} $, and then we search the $m$-th free pod in the pods status array. This ensures to always find a free pod, no matter the value of $n$ chosen by \UPPAAL . \vspace{0,2cm}\\
+\end{tabularx}
