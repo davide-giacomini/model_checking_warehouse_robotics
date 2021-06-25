@@ -2,7 +2,7 @@
 The development of cutting-edge technologies in automated warehouses has taken outstanding steps in the last few years. 
 This fast-paced environment requires a high level of reliability, in terms of speed and interaction between the many system components.
 Formal verification plays an essential role in ensuring an error-free environment, by analysing synthetic models, that capture the main features of the real-world problem.\\
-The Model Checking of Warehouse Robotics project employs \UPPAAL \ to model a simplified automated warehouse environment. The goal is to verify some significant properties in different scenarios, in order to show the correctness of the model.
+The Model Checking of Warehouse Robotics project employs \UPPAAL\ \cite{uppaal} to model a simplified automated warehouse environment. The goal is to verify some significant properties in different scenarios, in order to show the correctness of the model.
 \end{abstract}
 
 \section{Introduction}
@@ -27,4 +27,4 @@ The environment where these components interact is a rectangular grid (i.e., the
 \textbf{Task queue} & It periodically generates new tasks and places them into a First-In-First-Out (FIFO) queue.\vspace{0,2cm}\\
 \end{tabularx}
 
-The delays in the actions performed by the components have been included in order to create a model closer to a real-world situation.
+Non-deterministic delays in the actions performed by the components have been included in order to create a model closer to a real-world situation, using \UPPAAL SMC.
