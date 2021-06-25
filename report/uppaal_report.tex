@@ -9,13 +9,14 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \usepackage{tabularx}
+\usepackage{ltablex}
 
 \pagestyle{headings}
 
 \title{Formal Methods for Concurrent and Real-Time Systems}
 \author{Giacomini Davide \and Giarduz Andrea \and Grosso Veronica}
 
-\newcommand{\UPPAAL}{{\scshape Uppaal }}
+\newcommand{\UPPAAL}{{\scshape Uppaal}}
 
 \begin{document}
 \begin{titlepage}
@@ -55,9 +56,6 @@
 \pagenumbering{Roman}
 \setcounter{tocdepth}{3}
 \tableofcontents
-
-\newpage
-
 \listoffigures
 \addcontentsline{toc}{section}{\listfigurename}
 \listoftables
@@ -66,9 +64,9 @@
 \newpage
 \pagenumbering{arabic}
 
-\include{subfiles/high_level_model}
-\include{subfiles/component}
-\include{subfiles/properties}
-\include{subfiles/conclusion}
+\input{subfiles/high_level_model}
+\input{subfiles/component}
+\input{subfiles/properties}
+\input{subfiles/conclusion}
 
 \end{document}
