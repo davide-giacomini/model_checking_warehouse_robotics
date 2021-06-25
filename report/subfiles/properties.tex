@@ -47,6 +47,8 @@ In this section we will stress the system by changing the delays and the grid co
 
 We analysed three different scenarios. In the first one, we analysed the behaviour og the system with a \texttt{10x10} grid and 3 robots. In the second one, we increased the number of robots to 6, maintaining the same grid dimension. Finally, we observed how the system reacts to a \texttt{8x12} grid, being it rectangular and not squared. In this case, we used 4 robots, to simulate an average situation [?].
 
+We considered the length of the queue to be always equal to 20 maximum tasks. The variable parameter was the frequency, not the length [MI E' VENUTO IN MENTE ALL'ULTIMO POI LO SISTEMO].
+
 For all the scenarios we used the same query, that can be found in the tab \emph{Verifier} of \UPPAAL. It is equivalent to the CTL formula:
 
 \begin{equation}
@@ -60,7 +62,7 @@ In order to offer a general overview of all the vericiations, we collected all t
     \centering
         \begin{tabular}{| c || c c c c c |} 
             \hline
-             & Scen 1.a & Scen 1.b & Scen 1.c & Scen 1.d & Scen 1.e \\ [0.5ex] 
+            \texttt{10x10} & Scen 1.a & Scen 1.b & Scen 1.c & Scen 1.d & Scen 1.e \\ [0.5ex] 
             \hline\hline
             \mT & 40 & 150 & 40 & 30 & 30 \\
             \vT & 5 & 10 & 5 & 5 & 5 \\
@@ -69,7 +71,7 @@ In order to offer a general overview of all the vericiations, we collected all t
             \K & 1 & 1 & 2 & 1 & 1 \\
             \expdel & 1 & 1 & 1 & 1 & 1 \\
             \hline\hline
-            $p\in [\%]$ &  $[24.8,34.8]$ &  $[4.14,14.1]$ &  $[90.2,100]$ & $[76.4,86.4]$ & $[90.2, 100]$ \\ [0.5ex] 
+            $p[\%]\in$ &  $[24.8,34.8]$ &  $[4.14,14.1]$ &  $[90.2,100]$ & $[76.4,86.4]$ & $[90.2, 100]$ \\ [0.5ex] 
             \hline
         \end{tabular}
         \caption{Scenario 1 table [NAME]}
@@ -81,7 +83,7 @@ In order to offer a general overview of all the vericiations, we collected all t
     \centering
         \begin{tabular}{| c || c c c |} 
             \hline
-             & Scen 2.a & Scen 1.b & Scen 1.c \\ [0.5ex] 
+            \texttt{10x10} & Scen 2.a & Scen 2.b & Scen 2.c \\ [0.5ex] 
             \hline\hline
             \mT & 40 & 150 & 200 \\
             \vT & 5 & 10 & 10 \\
@@ -90,7 +92,7 @@ In order to offer a general overview of all the vericiations, we collected all t
             \K & 1 & 1 & 1 \\
             \expdel & 1 & 1 & 1 \\
             \hline\hline
-            $p\in [\%]$ &  $[60.2,70.2]$ &  $[20.0,30.0]$ &  $[6.19,16.2]$ \\ [0.5ex] 
+            $p[\%]\in$ &  $[60.2,70.2]$ &  $[20.0,30.0]$ &  $[6.19,16.2]$ \\ [0.5ex] 
             \hline
         \end{tabular}
         \caption{Scenario 2 table [NAME]}
@@ -139,15 +141,40 @@ Finally, we tried finding the maximum frequency that allows us considering the s
 
 In conclusion, we can observe that there is a trade-off to be taken into account. More robots are able to handle more tasks in a more efficient way. However, depending on the grid configuration, they could obstruct each other and worsen the overall efficiency.
 
+\begin{table}[b]
+    \centering
+        \begin{tabular}{| c || c c c c |} 
+            \hline
+            \texttt{12x8} & Scen 3.a & Scen 3.b & Scen 3.c & Scen 3.d \\ [0.5ex] 
+            \hline\hline
+            \mT & 40 & 40 & 40 & 40 \\
+            \vT & 5 & 80 & 5 & 5 \\
+            \mH & 3 & 3 & 6 & 6 \\
+            \vH & 2 & 2 & 2 & 15\\
+            \K & 1 & 1 & 1 & 1 \\
+            \expdel & 1 & 1 & 1 & 1 \\
+            \hline\hline
+            $p[\%]\in$ &  $[12.7,29.1]$ &  $[7.87,22.4]$ &  $[16.9,34.7]$ &  $[27.6,47.2]$ \\ [0.5ex] 
+            \hline
+        \end{tabular}
+        \caption{Scenario 2 table [NAME]}
+        \label{tab:scenthreetable}
+\end{table}
+
 \subsubsection{Third Scenario}
-The last scenario that we would like to present is less specific. We stressed an environment with a \texttt{9x9} grid and 4 robots, in order to combine together some properties.
+The last scenario that we would like to present is less specific. We stressed an environment with a \texttt{12x8} grid and 4 robots, in order to analyse the behaviour of the system in a rectangular grid. 
 
-Here we concentrated more on the reactions of the system when changing the standard deviations and the human average delay time.
+Here we concentrated more on the reactions of the system when changing the standard deviations (\vH \space and \vT) and the human average delay time (\mH).
 
-We will only report the relevant results.
+The relevant results are collected at Table \ref{tab:scenthreetable}. We began analysing the system in a realistic environment (\emph{Scen 3.a}) and then we changed the relevant parameters. We isolated the analysis for each parameter, changing only one value at a time, in order to ease the behavioural evaluation.
 
-In questo pezzo ho fatto una prova normale, poi ho aumentato la deviazione standard prima del task e poi del human. In entrambi i casi, va a incidere solo se superi il valore della media, e va incidere poco. Comunque, per l'umano aumenta la probabiiltà di errore e invece per il task diminusice, giustamente.
+In the first place, we analysed the system reaction in a standard and realistic situation, as it is shown at \emph{Scen 3.a}. The resulting probabilistic interval is quite low, as it floats around the $20\%$, but it is not sufficient for considering the system smooth in this configuration.
 
-Mi sveglio tra 3 ore e mezza e finiamo. Ho vomitato tutto ciò che c'è da scrivere, almeno da quel punto di vista ho finito, poi tocca abbellirlo.
+We subsequently stressed the environment in three different ways:
+\begin{itemize}
+    \item Firstly, we increased \vT. We tried several values to see how the system reacts to them, and we understood that the system actually responds when the standard deviation is a lot greater than the average (in this case, \mT). Hence, it reacts with a significant difference when the actual delay changes a lot at each iteration. \emph{Scen 3.b} at Table \ref{tab:scenthreetable} highlights this behaviour, even though the gap is not as big as if we were increasing \mT.
+    \item Secondly, we tried increasing \mH, simulating a situation in which the human is much slower than the robot. As expected, it results in an increase of the resulting probability. The human appears to be an important member of the production line. The result is detailed at Table \ref{tab:scenthreetable}, \emph{Scen 3.c}.
+    \item Finally, we increased \vH while maintaining the \emph{Scen 3.c} parameters (Table \ref{tab:scenthreetable}, \emph{Scen 3.d}). As in the previous cases, the general expected behaviour is respected and the probability range increases.
+\end{itemize}
 
-Inoltre, non sono riuscito a fare altre proprietà non tanto per mancanza di tempo, quanto perché non sono riuscito proprio neanche a pensare a cose sensate (e la cosa del pods\_unavailable non mi funzionava)
+In conclusion, we have noticed that the standard deviation impacts less the system rather than the average delay. This was expected, even though this verification has been very useful in order to understand the numerical differences between deviation and average.
