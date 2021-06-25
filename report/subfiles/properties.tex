@@ -10,7 +10,9 @@
 \section{Properties}
 In this section we are going to describe the properties that we have verified over the system to ensure its correctness and to analyse its behaviour. Unless otherwise specified, we ran our verifications with a time bounded to \tauconst \space time units, in order to emulate a realistic environment when fully operational.
 
-During the verification phase we have used the default statistical parameters of \UPPAAL. It was in reasonable considering a confidence of 95\% for verification purposes. We also considered the other statistical parameters as reasonable [NON MI PIACE QUESTA FRASE FORSE LA TOLGO]. Those parameters with the respective values are reported in the Table \ref{tab:statparam}.
+We have reported two verifications, as we considered them crucial for analysing the behaviour of our system. The first one, described at section \ref{podsunavailable}, has been performed with the aim of investigating the probability of running out of pods available in the grid. The second one aims at analysing the probabilities of running out of space in the task queue, during an execution.
+
+During the verification phase we have used the default statistical parameters of \UPPAAL. It was reasonable considering a confidence of the 95\% for verification purposes, as well as the other values already present by default inside the tool. The parameters with the respective values are reported in the Table \ref{tab:statparam}.
 
 \begin{table}[h]
     \centering
@@ -31,6 +33,45 @@ During the verification phase we have used the default statistical parameters of
         \caption{Statistical parameters of \UPPAAL}
         \label{tab:statparam}
 \end{table}
+
+\subsection{Pods unavailable} \label{podsunavailable}
+This property has been generally analysed, without entering in the details of each single configuration.
+
+We analysed two cases and observed the reaction of the system in each of them.
+
+Considering that the pods could become unavailable when 
+\begin{equation} \label{podsavailable}
+    PODS\_NUMBER < QUEUE\_LENGTH + ROBOTS\_NUMBER
+\end{equation}
+we considered a case in which this formula is respected, and another one in which is not. Modifying the grid layout or the grid dimensions the number of pods can vary. Hence, we changed the grid dimension accordingly with our necessities.
+
+To verify this property we checked if the template \emph{Task\_queue} eventually enters the state \emph{task\_queue.pods\_unavailable}. The formula can be found in the tab \emph{Verifier} of \UPPAAL. The equivalent CTL formula is:
+\begin{equation}
+    SOSTITUIRE ->  \lnot \square \vee \vdash \lozenge \wedge \models  <- SOSTITUIRE
+\end{equation}
+Where $TAU (= \tauconst)$ is the upper bound limit.
+\\
+
+In the first case, we used a \texttt{6x6} grid. This configuration respects the equation \ref{podsavailable}. As the Table \ref{tab:tabpodsunavailable} shows, it's quite sure that the system fails [DICO MEGLIO, PRECISO ANCHE IL NUMERO DI RUNS]. It was expected.
+\\
+
+In the second case, we used a \texttt{10x10}, thus violating the equation \ref{podsavailable}. In the Table \ref{tab:tabpodsunavailable} we can see that in this case, the probability is the inverse of the previous one, with even less runs necessary. In fact, it should be impossible to reach the state \emph{task\_queue.pods\_unavailable} when the equation is not respected (29 runs is the minimum in \UPPAAL) [ANCHE QUI SCRIVERLA MEGLIO].
+
+\begin{table}[h]
+    \centering
+        \begin{tabular}{| c || c c |} 
+            \hline
+             & First configuration & Second configuration \\ [0.5ex] 
+            \hline\hline
+            Grid dimension & \texttt{6x6} & \texttt{10x10} \\
+            Number of runs & 54 & 29 \\
+            \hline\hline
+            $prob \in$ &  $[90.11\%,99.95\%]$ & $[0\%,0.098\%]$\\ [0.5ex] 
+            \hline
+        \end{tabular}
+        \caption{Scenario 1 table [NAME]}
+        \label{tab:tabpodsunavailable}
+    \end{table}
 
 \subsection{Full queue [UN NOME FIGO PER IL TITOLO?]}
 This is the most important property to be verified, in order to understand if the system reacts in a proper way to several configurations. The system should sustain a high number of tasks generated during the execution.
