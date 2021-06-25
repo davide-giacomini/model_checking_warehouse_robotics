@@ -3,9 +3,9 @@ The detailed description of the system components is presented in this section. 
 
 \subsection{Environment and System Declarations}
 The project declarations contain the auxiliary functions and variables to facilitate the implementation of the model. 
-For instance, functions such as \texttt{stdNormal()} and \texttt{Normal(mean, stdDev)} are essential to produce the delays that follow a Normal Distribution  \cite{smc_tutorial}.
+For instance, functions such as \texttt{stdNormal()} and \texttt{Normal(mean, stdDev)} are essential to produce delays that follow a Normal Distribution  \cite{smc_tutorial}.
 
-Moreover, this section features the constants and, in a more general way, the required data structures. The most important characteristics are:
+Moreover, this section features the constants and the data structures. The most important characteristics are:
 
 \begin{tabularx}{\textwidth}{lX}
 \textbf{Grid} & The warehouse floor plan has been represented by a parametric N $\times$ M matrix. The matrix choice easily allows to compute offsets and distances between grid slots. Furthermore it has an intuitive visual prospect.
@@ -48,13 +48,13 @@ Transition between different states, on the other hand, are related to different
 The idle position, \texttt{start}, features an exponential delay, which could represent a non-deterministic robot behaviour in the processing before taking a new task.
 
 \subsection{Human Operator}	
-The Human Operator is modelled as a two-state timed automaton, to make it as simple as possible. As soon as a robot arrives in the delivery point with a pod, it synchronizes with the operator. The human picks up the right item from the pod. It takes the human with a delay \texttt{human\_delay} modelled by a Normal Distribution. When the job is done, it notifies the robot that it is free to go. 
+The Human Operator is modelled as a two-state timed automaton, to make it as simple as possible. As soon as a robot arrives in the delivery point with a pod, it synchronizes with the operator. The human picks up the right item from the pod. It takes a delay \texttt{human\_delay}, modelled by a Normal Distribution, for the human to finish the action. When the job is done, it notifies the robot that it is free to go. 
 
 \subsection{Design Choices}
 The main design choices and assumptions for this project can be summarized into four main areas:
 
 \begin{tabularx}{\textwidth}{lX}
-\textbf{Robot movement} & In order to keep the verification times short, while using an efficient movement algorithm, we chose to suppose to existence of a \textit{robot highway} on the right side of the map, containing the entry and delivery points. The algorithm works by preferring a tile with the minimum Manhattan distance to the destination. The choice of the Manhattan distance is due to the robot not being able to move diagonally. The preferred direction, at this point, is moving towards the \textit{robot highway}, hence the assumption on its existence. This way, robots are less prone to routing congestion. If possible, the robot tries not to move to the tile it previously occupied. This avoids starving conditions where two robots keep performing the same movements over and over again. Because of these design choices, the algorithm works best with horizontal alternated parallel lanes of pods. \vspace{0,2cm}\\
+\textbf{Robot movement} & In order to keep the verification times short, while using an efficient movement algorithm, we supposed the existence of a \textit{robot highway} on the right side of the map, containing the entry and delivery points. The algorithm works by choosing, if possible, the tile with the minimum Manhattan distance to the destination. We implemented the Manhattan distance as the robot is not able to move diagonally. The preferred direction, at this point, is moving towards the \textit{robot highway}, hence the assumption about its existence. This way, robots are less prone to routing congestion. If possible, the robot tries not to move to the tile it previously occupied. This avoids starving conditions where robots keep performing the same movements over and over again. Because of these design choices, the algorithm works best with horizontal alternated parallel lanes of pods. \vspace{0,2cm}\\
 \textbf{States number} & The target of the modelling phase for each template was to keep the number of states low, thus allowing a faster verification and a better readability. \vspace{0,2cm}\\
 \textbf{Channel policy} & The \UPPAAL \ SMC extension requires all channels to be \texttt{broadcast}. In our model, this is not a problem, since communication is ensured to be one-to-one. The only relevant point where this could have been an issue is the \texttt{free\_robot} channel, as the others have only one possible receiver (either the Task Queue or the Human Operator). In spite of this, only one robot can occupy the delivery point, hence only the rightful synchronization will be activated. \vspace{0,2cm}\\
 \textbf{New task selection} & A reduction of complexity also took place in the policy of new task selection. A number $n \in \left[0,\texttt{PODS\_N}\right] $ is randomly chosen by the tool. In order to find the first available pod, we compute $ m = n \mod \texttt{free\_pods\_number()} $, and then we search the $m$-th free pod in the pods status array. This ensures to always find a free pod, no matter the value of $n$ chosen by \UPPAAL . \vspace{0,2cm}\\
