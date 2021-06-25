@@ -10,12 +10,19 @@ Moreover, this section features the constants and, in a more general way, the re
 \begin{tabularx}{\textwidth}{lX}
 \textbf{Grid} & The warehouse floor plan has been represented by a parametric N $\times$ M matrix. The matrix choice easily allows to compute offsets and distances between grid slots. Furthermore it has an intuitive visual prospect.
 
-The grid layout is flexible and can be changed by setting the N, M values, the pods positions, as well as the entry and delivery points.\vspace{0,2cm}\\
+The grid layout is flexible and can be changed by setting the N, M values, the pods positions, as well as the entry and delivery points. In Figure \ref{fig:grid10x10} it is possible to see an example of a grid layout. \vspace{0,2cm}\\
 \textbf{Pods} & The pods id, position and status are saved in a matrix \texttt{pods[PODS\_N][3]}, where \texttt{PODS\_N} is the total number of pods. The first index is the pod id, while the second one contains the x and y coordinates and the pod status. The pods can either be free or assigned to a task. 
 
 This data structure allows an easy access to both the position and status of pods by their id.\vspace{0,2cm}\\
 \textbf{Queue} & It is a FIFO array, of size \texttt{MAX\_T}, containing the pending tasks. The parameter \texttt{MAX\_T} represents the maximum queue size. Together with the \texttt{current\_length\_queue} variable, it is possible to model a queue variable in length, despite \UPPAAL \ not providing dynamic memory management. \vspace{0,2cm}\\
 \end{tabularx}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\textwidth]{resources/grid10x10.png}
+    \caption{Example of a grid layout}
+    \label{fig:grid10x10}
+\end{figure}
 
 \subsection{Task Queue}
 The Task Queue template models the generation and dispatching of tasks. Since this is the first entity to start the computation, it initializes the grid, the pods and the queue. 

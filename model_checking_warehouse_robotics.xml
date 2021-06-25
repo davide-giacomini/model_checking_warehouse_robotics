@@ -63,7 +63,7 @@ const int deliveryPoint[2] = {0,M-1};
 const double PI = 3.14159265358979323846;
 
 // Time bound for stochastic features
-const int TAU = 6000;
+const int TAU = 5000;
 
 // Normal distribution functions for SMC extensions
 double stdNormal() {// N(0, 1)
@@ -542,14 +542,6 @@ system human, task_queue_process, robotA, robotB, robotC, robotD, robotE, robotF
 		</query>
 		<query>
 			<formula>Pr[&lt;=TAU] (&lt;&gt; task_queue_process.Error_maxSizeReached)</formula>
-			<comment></comment>
-		</query>
-		<query>
-			<formula>E[&lt;=TAU;10](min: task_queue_process.free_pods_number())</formula>
-			<comment></comment>
-		</query>
-		<query>
-			<formula>Pr[&lt;=TAU] ([] task_queue_process.free_pods_number() &lt; 9)</formula>
 			<comment></comment>
 		</query>
 	</queries>
