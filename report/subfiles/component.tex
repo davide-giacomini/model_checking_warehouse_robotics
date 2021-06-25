@@ -11,9 +11,7 @@ Moreover, this section features the constants and, in a more general way, the re
 \textbf{Grid} & The warehouse floor plan has been represented by a parametric N $\times$ M matrix. The matrix choice easily allows to compute offsets and distances between grid slots. Furthermore it has an intuitive visual prospect.
 
 The grid layout is flexible and can be changed by setting the N, M values, the pods positions, as well as the entry and delivery points. In Figure \ref{fig:grid10x10} it is possible to see an example of a grid layout. \vspace{0,2cm}\\
-\textbf{Pods} & The pods id, position and status are saved in a matrix \texttt{pods[PODS\_N][3]}, where \texttt{PODS\_N} is the total number of pods. The first index is the pod id, while the second one contains the x and y coordinates and the pod status. The pods can either be free or assigned to a task. 
-
-This data structure allows an easy access to both the position and status of pods by their id.\vspace{0,2cm}\\
+\textbf{Pods} & The pods id, position (x and y) and status are saved in a matrix \texttt{pods[PODS\_N][3]}, where \texttt{PODS\_N} is the total number of pods. The pods can either be free or assigned to a task. This data structure allows an easy access to both the position and status of pods by their id.\vspace{0,2cm}\\
 \textbf{Queue} & It is a FIFO array, of size \texttt{MAX\_T}, containing the pending tasks. The parameter \texttt{MAX\_T} represents the maximum queue size. Together with the \texttt{current\_length\_queue} variable, it is possible to model a queue variable in length, despite \UPPAAL \ not providing dynamic memory management. \vspace{0,2cm}\\
 \end{tabularx}
 
@@ -27,14 +25,18 @@ This data structure allows an easy access to both the position and status of pod
 \subsection{Task Queue}
 The Task Queue template models the generation and dispatching of tasks. Since this is the first entity to start the computation, it initializes the grid, the pods and the queue. 
 
-\begin{tabularx}{\textwidth}{lX}
-\multicolumn{2}{l}{{\scshape Normal Execution}}
- \vspace{0,2cm}\\
+\noindent \begin{tabularx}{\textwidth}{lX}
+\multicolumn{2}{l}{{\scshape Normal Execution}} \vspace{0,1cm}\\
+\toprule
 \texttt{task\_generation} & The Task Queue generates a new task and places it in the FIFO queue. The generation happens with a variable delay \texttt{task\_delay}, computed every time following a Normal Distribution. \vspace{0,2cm}\\
-\texttt{task\_sent} & The timed automaton synchronizes with an idle robot on the first item of the task queue. It sends the information about the pod id, matched with the task, to the robot. After that, it removes the assigned task from the queue. This is useful because it avoids that multiple robots process the same task. \vspace{0,4cm}\\
-\multicolumn{2}{l}{{\scshape Error States}} \vspace{0,2cm}\\
+\texttt{task\_sent} & The timed automaton synchronizes with an idle robot on the first item of the task queue. It sends the information about the pod id, matched with the task, to the robot. After that, it removes the assigned task from the queue. This is useful because it avoids that multiple robots process the same task.\\
+\end{tabularx}
+
+\noindent \begin{tabularx}{\textwidth}{lX}
+\multicolumn{2}{l}{{\scshape Error States}} \vspace{0,1cm}\\
+\toprule
 \texttt{Error\_maxSizeReached}  & This error state is reached when the task queue is full. The newly generated tasks would be lost, so the timed automaton stops its behaviour. \vspace{0,2cm}\\
-\texttt{Err\_podsUnavailable}   & The pods unavailable error state happens whenever the number of tasks overcomes the number of available pods. In particular, the new tasks cannot be associated with any pod, creating an undesired situation. Naturally, for this to happen, \texttt{MAX\_T} $>$ \texttt{PODS\_N} must hold. \vspace{0,2cm}\\
+\texttt{Err\_podsUnavailable}   & The pods unavailable error state happens whenever the number of tasks overcomes the number of available pods. In particular, the new tasks cannot be associated with any pod, creating an undesired situation. \vspace{0,2cm}\\
 \end{tabularx}
 
 \subsection{Robots}

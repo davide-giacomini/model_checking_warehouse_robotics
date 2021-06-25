@@ -19,12 +19,11 @@ The environment where these components interact is a rectangular grid (i.e., the
 \end{tabularx}
 
 \noindent Specifically, these are the main features of the components:
-\vspace{0,5cm}
-
+\vspace{0,2cm}
 \begin{tabularx}{\textwidth}{lX}
 \textbf{Human} & The job of the operator is to pick up an item once a robot comes into the human working station. The operator is kept by default at the edge of the system.\vspace{0,2cm}\\
 \textbf{Robot} & It is in charge of the delivery of a specific pod to a human, according to what specified in a task.\vspace{0,2cm}\\
 \textbf{Task queue} & It periodically generates new tasks and places them into a First-In-First-Out (FIFO) queue.\vspace{0,2cm}\\
 \end{tabularx}
 
-Non-deterministic delays in the actions performed by the components have been included in order to create a model closer to a real-world situation, using \UPPAAL SMC.
+Non-deterministic delays in the actions performed by the components have been included in order to create a model closer to a real-world situation, using \UPPAAL \ SMC.
