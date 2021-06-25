@@ -10,7 +10,9 @@
 \section{Properties}
 In this section we are going to describe the properties that we have verified over the system to ensure its correctness and to analyse its behaviour. Unless otherwise specified, we ran our verifications with a time bounded to \tauconst \space time units, in order to emulate a realistic environment when fully operational.
 
-During the verification phase we have used the default statistical parameters of \UPPAAL. It was in reasonable considering a confidence of 95\% for verification purposes. We also considered the other statistical parameters as reasonable [NON MI PIACE QUESTA FRASE FORSE LA TOLGO]. Those parameters with the respective values are reported in the Table \ref{tab:statparam}.
+We have reported two verifications, as we considered them crucial for analysing the behaviour of our system. The first one, described at section \ref{podsunavailable}, has been performed with the aim of investigating the probability of running out of pods available in the grid. The second one aims at analysing the probabilities of running out of space in the task queue, during an execution.
+
+During the verification phase we have used the default statistical parameters of \UPPAAL. It was reasonable considering a confidence of the 95\% for verification purposes, as well as the other values already present by default inside the tool. The parameters with the respective values are reported in the Table \ref{tab:statparam}.
 
 \begin{table}[h]
     \centering
@@ -32,6 +34,45 @@ During the verification phase we have used the default statistical parameters of
         \label{tab:statparam}
 \end{table}
 
+\subsection{Pods unavailable} \label{podsunavailable}
+This property has been generally analysed, without entering in the details of each single configuration.
+
+We analysed two cases and observed the reaction of the system in each of them.
+
+Considering that the pods could become unavailable when 
+\begin{equation} \label{podsavailable}
+    PODS\_NUMBER < QUEUE\_LENGTH + ROBOTS\_NUMBER
+\end{equation}
+we considered a case in which this formula is respected, and another one in which is not. Modifying the grid layout or the grid dimensions the number of pods can vary. Hence, we changed the grid dimension accordingly with our necessities.
+
+To verify this property we checked if the template \emph{Task\_queue} eventually enters the state \emph{task\_queue.pods\_unavailable}. The formula can be found in the tab \emph{Verifier} of \UPPAAL. The equivalent CTL formula is:
+\begin{equation}
+    SOSTITUIRE ->  \lnot \square \vee \vdash \lozenge \wedge \models  <- SOSTITUIRE
+\end{equation}
+Where $TAU (= \tauconst)$ is the upper bound limit.
+\\
+
+In the first case, we used a \texttt{6x6} grid. This configuration respects the equation \ref{podsavailable}. As the Table \ref{tab:tabpodsunavailable} shows, it's quite sure that the system fails [DICO MEGLIO, PRECISO ANCHE IL NUMERO DI RUNS]. It was expected.
+\\
+
+In the second case, we used a \texttt{10x10}, thus violating the equation \ref{podsavailable}. In the Table \ref{tab:tabpodsunavailable} we can see that in this case, the probability is the inverse of the previous one, with even less runs necessary. In fact, it should be impossible to reach the state \emph{task\_queue.pods\_unavailable} when the equation is not respected (29 runs is the minimum in \UPPAAL) [ANCHE QUI SCRIVERLA MEGLIO].
+
+\begin{table}[h]
+    \centering
+        \begin{tabular}{| c || c c |} 
+            \hline
+             & First configuration & Second configuration \\ [0.5ex] 
+            \hline\hline
+            Grid dimension & \texttt{6x6} & \texttt{10x10} \\
+            Number of runs & 54 & 29 \\
+            \hline\hline
+            $prob \in$ &  $[90.11\%,99.95\%]$ & $[0\%,0.098\%]$\\ [0.5ex] 
+            \hline
+        \end{tabular}
+        \caption{Scenario 1 table [NAME]}
+        \label{tab:tabpodsunavailable}
+    \end{table}
+
 \subsection{Full queue [UN NOME FIGO PER IL TITOLO?]}
 This is the most important property to be verified, in order to understand if the system reacts in a proper way to several configurations. The system should sustain a high number of tasks generated during the execution.
 
@@ -47,6 +88,8 @@ In this section we will stress the system by changing the delays and the grid co
 
 We analysed three different scenarios. In the first one, we analysed the behaviour og the system with a \texttt{10x10} grid and 3 robots. In the second one, we increased the number of robots to 6, maintaining the same grid dimension. Finally, we observed how the system reacts to a \texttt{8x12} grid, being it rectangular and not squared. In this case, we used 4 robots, to simulate an average situation [?].
 
+We considered the length of the queue to be always equal to 20 maximum tasks. The variable parameter was the frequency, not the length [MI E' VENUTO IN MENTE ALL'ULTIMO POI LO SISTEMO].
+
 For all the scenarios we used the same query, that can be found in the tab \emph{Verifier} of \UPPAAL. It is equivalent to the CTL formula:
 
 \begin{equation}
@@ -60,7 +103,7 @@ In order to offer a general overview of all the vericiations, we collected all t
     \centering
         \begin{tabular}{| c || c c c c c |} 
             \hline
-             & Scen 1.a & Scen 1.b & Scen 1.c & Scen 1.d & Scen 1.e \\ [0.5ex] 
+            \texttt{10x10} & Scen 1.a & Scen 1.b & Scen 1.c & Scen 1.d & Scen 1.e \\ [0.5ex] 
             \hline\hline
             \mT & 40 & 150 & 40 & 30 & 30 \\
             \vT & 5 & 10 & 5 & 5 & 5 \\
@@ -69,7 +112,7 @@ In order to offer a general overview of all the vericiations, we collected all t
             \K & 1 & 1 & 2 & 1 & 1 \\
             \expdel & 1 & 1 & 1 & 1 & 1 \\
             \hline\hline
-            $p\in [\%]$ &  $[24.8,34.8]$ &  $[4.14,14.1]$ &  $[90.2,100]$ & $[76.4,86.4]$ & $[90.2, 100]$ \\ [0.5ex] 
+            $p[\%]\in$ &  $[24.8,34.8]$ &  $[4.14,14.1]$ &  $[90.2,100]$ & $[76.4,86.4]$ & $[90.2, 100]$ \\ [0.5ex] 
             \hline
         \end{tabular}
         \caption{Scenario 1 table [NAME]}
@@ -81,7 +124,7 @@ In order to offer a general overview of all the vericiations, we collected all t
     \centering
         \begin{tabular}{| c || c c c |} 
             \hline
-             & Scen 2.a & Scen 1.b & Scen 1.c \\ [0.5ex] 
+            \texttt{10x10} & Scen 2.a & Scen 2.b & Scen 2.c \\ [0.5ex] 
             \hline\hline
             \mT & 40 & 150 & 200 \\
             \vT & 5 & 10 & 10 \\
@@ -90,7 +133,7 @@ In order to offer a general overview of all the vericiations, we collected all t
             \K & 1 & 1 & 1 \\
             \expdel & 1 & 1 & 1 \\
             \hline\hline
-            $p\in [\%]$ &  $[60.2,70.2]$ &  $[20.0,30.0]$ &  $[6.19,16.2]$ \\ [0.5ex] 
+            $p[\%]\in$ &  $[60.2,70.2]$ &  $[20.0,30.0]$ &  $[6.19,16.2]$ \\ [0.5ex] 
             \hline
         \end{tabular}
         \caption{Scenario 2 table [NAME]}
@@ -139,15 +182,40 @@ Finally, we tried finding the maximum frequency that allows us considering the s
 
 In conclusion, we can observe that there is a trade-off to be taken into account. More robots are able to handle more tasks in a more efficient way. However, depending on the grid configuration, they could obstruct each other and worsen the overall efficiency.
 
+\begin{table}[b]
+    \centering
+        \begin{tabular}{| c || c c c c |} 
+            \hline
+            \texttt{12x8} & Scen 3.a & Scen 3.b & Scen 3.c & Scen 3.d \\ [0.5ex] 
+            \hline\hline
+            \mT & 40 & 40 & 40 & 40 \\
+            \vT & 5 & 80 & 5 & 5 \\
+            \mH & 3 & 3 & 6 & 6 \\
+            \vH & 2 & 2 & 2 & 15\\
+            \K & 1 & 1 & 1 & 1 \\
+            \expdel & 1 & 1 & 1 & 1 \\
+            \hline\hline
+            $p[\%]\in$ &  $[12.7,29.1]$ &  $[7.87,22.4]$ &  $[16.9,34.7]$ &  $[27.6,47.2]$ \\ [0.5ex] 
+            \hline
+        \end{tabular}
+        \caption{Scenario 2 table [NAME]}
+        \label{tab:scenthreetable}
+\end{table}
+
 \subsubsection{Third Scenario}
-The last scenario that we would like to present is less specific. We stressed an environment with a \texttt{9x9} grid and 4 robots, in order to combine together some properties.
+The last scenario that we would like to present is less specific. We stressed an environment with a \texttt{12x8} grid and 4 robots, in order to analyse the behaviour of the system in a rectangular grid. 
 
-Here we concentrated more on the reactions of the system when changing the standard deviations and the human average delay time.
+Here we concentrated more on the reactions of the system when changing the standard deviations (\vH \space and \vT) and the human average delay time (\mH).
 
-We will only report the relevant results.
+The relevant results are collected at Table \ref{tab:scenthreetable}. We began analysing the system in a realistic environment (\emph{Scen 3.a}) and then we changed the relevant parameters. We isolated the analysis for each parameter, changing only one value at a time, in order to ease the behavioural evaluation.
 
-In questo pezzo ho fatto una prova normale, poi ho aumentato la deviazione standard prima del task e poi del human. In entrambi i casi, va a incidere solo se superi il valore della media, e va incidere poco. Comunque, per l'umano aumenta la probabiiltà di errore e invece per il task diminusice, giustamente.
+In the first place, we analysed the system reaction in a standard and realistic situation, as it is shown at \emph{Scen 3.a}. The resulting probabilistic interval is quite low, as it floats around the $20\%$, but it is not sufficient for considering the system smooth in this configuration.
 
-Mi sveglio tra 3 ore e mezza e finiamo. Ho vomitato tutto ciò che c'è da scrivere, almeno da quel punto di vista ho finito, poi tocca abbellirlo.
+We subsequently stressed the environment in three different ways:
+\begin{itemize}
+    \item Firstly, we increased \vT. We tried several values to see how the system reacts to them, and we understood that the system actually responds when the standard deviation is a lot greater than the average (in this case, \mT). Hence, it reacts with a significant difference when the actual delay changes a lot at each iteration. \emph{Scen 3.b} at Table \ref{tab:scenthreetable} highlights this behaviour, even though the gap is not as big as if we were increasing \mT.
+    \item Secondly, we tried increasing \mH, simulating a situation in which the human is much slower than the robot. As expected, it results in an increase of the resulting probability. The human appears to be an important member of the production line. The result is detailed at Table \ref{tab:scenthreetable}, \emph{Scen 3.c}.
+    \item Finally, we increased \vH while maintaining the \emph{Scen 3.c} parameters (Table \ref{tab:scenthreetable}, \emph{Scen 3.d}). As in the previous cases, the general expected behaviour is respected and the probability range increases.
+\end{itemize}
 
-Inoltre, non sono riuscito a fare altre proprietà non tanto per mancanza di tempo, quanto perché non sono riuscito proprio neanche a pensare a cose sensate (e la cosa del pods\_unavailable non mi funzionava)
+In conclusion, we have noticed that the standard deviation impacts less the system rather than the average delay. This was expected, even though this verification has been very useful in order to understand the numerical differences between deviation and average.
