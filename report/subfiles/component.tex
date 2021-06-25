@@ -31,7 +31,11 @@ The Task Queue template models the generation and dispatching of tasks. Since th
 \end{tabularx}
 
 \subsection{Robots}
+The Robot template is the most complex component in the system, since it handles the task retrieval, the robot movement algorithm, the pod delivery and the returning of the pod to its original position.
+
+In order to do so, it synchronizes both with the Task Queue and the Human Operator. 
 
 \subsection{Human Operator}	
+The Human Operator is modelled as a two-state timed automaton, to make it as simple as possible. As soon as a robot arrives in the delivery point with a pod, it synchronizes with the operator. The human picks up the right item from the pod. It takes the human with a delay \texttt{human\_delay} modelled by a Normal Distribution. When the job is done, it notifies the robot that it is free to go. 
 
 \subsection{Design Choices}

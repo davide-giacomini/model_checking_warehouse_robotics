@@ -63,7 +63,7 @@ const int deliveryPoint[2] = {0,M-1};
 const double PI = 3.14159265358979323846;
 
 // Time bound for stochastic features
-const int TAU = 600;
+const int TAU = 6000;
 
 // Normal distribution functions for SMC extensions
 double stdNormal() {// N(0, 1)
@@ -167,7 +167,7 @@ void initialize_task_queue() {
     int i;
 
     for (i=0; i&lt;MAX_T; i++) {
-        task_queue[i] = POD_ERR; // TODO
+        task_queue[i] = POD_ERR;
     }
 }
 
@@ -181,7 +181,7 @@ double compute_task_delay(){
 }</declaration>
 		<location id="id0" x="-714" y="0">
 			<name x="-724" y="-34">start</name>
-			<label kind="invariant" x="-724" y="17">t &lt;= 0</label>
+			<committed/>
 		</location>
 		<location id="id1" x="-323" y="0">
 			<name x="-306" y="-25">task_generation</name>
@@ -541,7 +541,15 @@ system human, task_queue_process, robotA, robotB, robotC, robotD, robotE, robotF
 			<comment></comment>
 		</query>
 		<query>
-			<formula>Pr[&lt;=100] (&lt;&gt; task_queue_process.Error_maxSizeReached)</formula>
+			<formula>Pr[&lt;=TAU] (&lt;&gt; task_queue_process.Error_maxSizeReached)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E[&lt;=TAU;10](min: task_queue_process.free_pods_number())</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=TAU] ([] task_queue_process.free_pods_number() &lt; 9)</formula>
 			<comment></comment>
 		</query>
 	</queries>
