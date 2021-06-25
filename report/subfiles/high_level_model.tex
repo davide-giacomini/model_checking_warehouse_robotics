@@ -1,5 +1,31 @@
 \begin{abstract}\addcontentsline{toc}{section}{Abstract}
-    
+The development of cutting-edge technologies in automated warehouses has taken outstanding steps in the last few years. 
+This fast-paced environment requires a high level of reliability, in terms of speed and interaction between the many system components.
+Formal verification plays an essential role in ensuring an error-free environment, by analysing synthetic models, that capture the main features of the real-world problem.\\
+The Model Checking of Warehouse Robotics project employs \UPPAAL to model a simplified automated warehouse environment. The goal is to verify some significant properties in different scenarios, in order to show the correctness of the model.
 \end{abstract}
 
-\section{High Level Model Description}
+\section{Introduction}
+The Model Checking of Warehouse Robotics project is divided in two main focus areas: first, the efforts are placed in modelling the environment; then the target becomes the verification of significant properties, applied to the aforementioned model.
+
+The goal is the handling of multiple tasks: each task contains the information about a specific item (placed in a pod inside the warehouse) that needs to be delivered. 
+In particular, the high level model consists in a set of three different components, specifically the human, the robots and the task queue generator.
+The environment where these components interact is a rectangular grid (i.e., the warehouse floor plan). It is possible to identify on the map an entry point, a delivery point and a set of pods.
+
+\begin{table}[h!]
+\begin{tabularx}{\textwidth}{lX}
+\textbf{Entry point} & The initial slot where all the robots are placed at the beginning of the simulation.\vspace{0,2cm}\\
+\textbf{Delivery point} & The slot where the items need to be delivered.\vspace{0,2cm}\\
+\textbf{Pod} & Includes some items and it can be moved by the robots.\vspace{0,2cm}\\
+\end{tabularx}
+\end{table}
+
+Specifically, these are the main features of the components:
+
+\begin{table}[h!]
+\begin{tabularx}{\textwidth}{lX}
+\textbf{Human} & Kept at the edge of the system, the task of the human operator is to pick up an item once a robot comes into the human working station.\vspace{0,2cm}\\
+\textbf{Robot} & Is in charge of the delivery of a specific pod to a human, according to what specified in a task.\vspace{0,2cm}\\
+\textbf{Task queue} & Periodically generates new tasks and places them into a First-In-First-Out (FIFO) queue.\vspace{0,2cm}\\
+\end{tabularx}
+\end{table}

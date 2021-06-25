@@ -4,7 +4,7 @@
 \section{Properties}
 In this section we are going to describe the properties that we have verified over the system to ensure its correctness and to analyse its behaviour. Unless otherwise specified, we ran our verifications with a time bounded to \timebound \space time units. We set this bound after observing the behaviour of a medium-configuration system when changing the time bounded. We concluded that \timebound \space should be the correct number of time units to ensure a relevant bounded model checking.
 
-During the verification phase we have used the default statistical parameters of UPPAAL. It was reasonable considering a confidence of 95\% for verification purposes. We also considered the other statistical parameters as reasonable. Those parameters and those values are reported in the Table \ref{tab:statparam}.
+During the verification phase we have used the default statistical parameters of \UPPAAL. It was reasonable considering a confidence of 95\% for verification purposes. We also considered the other statistical parameters as reasonable. Those parameters and those values are reported in the Table \ref{tab:statparam}.
 
 \begin{table}[h]
     \centering
@@ -14,7 +14,7 @@ During the verification phase we have used the default statistical parameters of
             \hline\hline
             $\pm\delta$ & 0.01 \\
             $\beta$ & 0.05 \\
-            $\alpha$ & 0.01 \\
+            $\alpha$ & 0.05 \\
             $\epsilon$ & 0.05 \\
             $\mu_0$ & 0.9 \\
             $\mu_1$ & 1.1 \\
@@ -22,7 +22,7 @@ During the verification phase we have used the default statistical parameters of
             Discretization step & 0.01 \\ [0.5ex] 
             \hline
         \end{tabular}
-        \caption{Statistical parameters of UPPAAL}
+        \caption{Statistical parameters of \UPPAAL}
         \label{tab:statparam}
 \end{table}
 
