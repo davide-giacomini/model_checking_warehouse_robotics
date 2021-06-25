@@ -54,119 +54,60 @@ For all the scenarios we used the same query, that can be found in the tab \emph
 \end{equation}
 Where $TAU$ is the upper bound limit. As I mentioned before, $TAU = \tauconst$ in each verification.
 
-\subsubsection{First Scenario}
-This is the simplest case. In this scenario, there were three robots and the dimension of the grid was \texttt{10x10}. At Table \ref{tab:firstattempt} we reported the parameters that we chose in the first attempt.
-
-\begin{table}[h]
-\centering
-    \begin{tabular}{|c c|} 
-        \hline
-        Parameter & Value \\ [0.5ex] 
-        \hline\hline
-        mT & 40 \\
-        vT & 5 \\
-        mH & 3 \\
-        vH & 2 \\
-        k & 1 \\ [0.5ex] 
-        \hline
-    \end{tabular}
-    \caption{First attempt}
-    \label{tab:firstattempt}
-\end{table}
-
-Given that three robots are not able to handle a large number of tasks, we chose to give a high average time for the task generation delays while maintaining a general realistic behaviour between the robots and the human. We assumed that the human is slower than the robots and that it has a significant high deviation standard (with respect to its own average time). We also assumed the task generation to be quite constant (the deviation standard is about the 12 percent of the average time), in order to avoid creating a situation too floating.
-
-The aforementioned assumptions could bring to the conclusion that, probably, the robots will be able to handle the tasks generated quite easily. However, the verification results show that there is about the 30\% of probability that the queue will reach the maximum size. More precisely, after 338 runs, the tool can affirm with a confidence of the 95\% that the queue will end up full with a probability within the interval \texttt{[0.247697,0.347638]}.
-
-As a consequence, we decreased the task generation frequency until the result reached a low probability. We focused on the average delay time $mT$ and we changed the other parameters only in order to give a realistic behaviour to the overall system. With the values indicated at Table \ref{tab:lowbound}, the probability of running out of space was in the interval \texttt{[0.0413775,0.141115]}. We considered it sufficient to be considered a successful result.
+In order to offer a general overview of all the vericiations, we collected all the results in the Table \ref{tab:scenonetable}. We will use this table during the description of each scenario, describing why we used certain values and the purpose of each verification.
 
 \begin{table}[h]
     \centering
-        \begin{tabular}{|c c|} 
+        \begin{tabular}{| c || c c c c c |} 
             \hline
-            Parameter & Value \\ [0.5ex] 
+             & Scen 1.a & Scen 1.b & Scen 1.c & Scen 1.d & Scen 1.e \\ [0.5ex] 
             \hline\hline
-            mT & 150 \\
-            vT & 10 \\
-            mH & 6 \\
-            vH & 4 \\
-            k & 1 \\ [0.5ex] 
+            \mT & 40 & 150 & 40 & 30 & 30 \\
+            \vT & 5 & 10 & 5 & 5 & 5 \\
+            \mH & 3 & 6 & 6 & 3 & 6 \\
+            \vH & 2 & 4 & 4 & 2 & 4 \\
+            \K & 1 & 1 & 2 & 1 & 1 \\
+            \expdel & 1 & 1 & 1 & 1 & 1 \\
+            \hline\hline
+            $p\in [\%]$ &  $[24.8,34.8]$ &  $[41.4,14.1]$ &  $[90.2,100]$ & $[76.4,86.4]$ & $[90.2, 100]$ \\ [0.5ex] 
             \hline
         \end{tabular}
-        \caption{Low bound}
-        \label{tab:lowbound}
-\end{table}
+        \caption{General tabel [NAME]}
+        \label{tab:scenonetable}
+    \end{table}
 
-We also tried rising the resulting probability with the aim of analysing the behaviour of the system under stress, with few robots. We did it in three ways:
+\subsubsection{First Scenario}
+The first scenario is the simplest one. In this case, there were 3 robots and the dimension of the grid was \texttt{10x10}.
+
+Given that three robots are not able to handle a large number of tasks, we firstly chose to give a high average time for the task generation delay (\mT) while maintaining a general realistic behaviour between the robots and the human (\mH). We assumed that the human is slower than the robots and that it has a significant high deviation standard (\vH). We also assumed the task generation to be quite constant, keeping a small deviation standard (\vT), in order to avoid creating a too floating situation. All these parameters are collected in the scenario \emph{Scenario 1.a} of the Table \ref{tab:scenonetable}.
+
+The aforementioned assumptions could bring to the conclusion that, probably, the robots will be able to handle the tasks generated quite easily. However, the verification results show that there is about the 30\% of probability that the queue will reach the maximum size.
+\\
+
+As a consequence, we decreased the task generation frequency until the result reached a low probability. We did that to understand what is, in this configuration, the maximum frequency that the system can handle.
+
+In these scenario we focused on the average delay time \mT \space and we changed the other parameters only in order to give a realistic behaviour to the overall system. [DEVO CAPIRE COME SPIEGARE BENE IL MOTIVO PER CUI ABBIAMO SOLO CAMBIATO \mT]
+
+We used the values indicated at Table \ref{tab:scenonetable} under \emph{Scenario 1.b} and we considered the resulting interval sufficient to indicate $\mT = 150$ as the maximum frequency [NON MI PIACE LA FRASE, praticamente ho spiegato che grazie a quel range di probabilità, a noi va bene così].
+\\
+
+Finally, we tried stressing the system in order to understand when it can no more handle the situation. We did it in three ways:
 \begin{itemize}
-    \item Firstly, we tried increasing $k$, with the aim of delaying the robots. It was enough to double the delay in order to reach the maximum probabilistic range, considering the tool's parameters which we mentioned above. With the values specified at Table \ref{tab:upboundrobot}, the resulting probability of exceeding the maximum queue size is \texttt{[0.901855,1]}.
-    \item Subsequently we tried decreasing the task generation delay. With the values described at Table \ref{tab:upboundtask}, we already obtained a probability in the range of \texttt{[0.763922,0.863898]}.
-    \item Finally, we modified the previous analysis, delaying, a little, also the human (Table \ref{tab:upboundhuman}). In this case the probability showed this interval: \texttt{[0.901855,1]}.
+    \item Firstly, we tried increasing \K, with the aim of delaying the robots. It was enough to double the delay in order to reach the maximum probabilistic range as shown at Table \ref{tab:scenonetable} under \emph{Scen 1.c}.
+    \item Subsequently we tried decreasing the task generation delay. At Table \ref{tab:scenonetable} under \emph{Scen 1.d}, we can see that, just decreasing the generation delay by $10$, the probabilistic range increased of about the $50\%$ with respect to the \emph{Scen 1.a}.
+    \item Finally, we modified the previous analysis. We kept the same values, except for delaying a little the human (Table \ref{tab:scenonetable}, \emph{Scen 1.e}). It is enough to delay the human some time units in order to reach the maximum possible range.
 \end{itemize}
 
-[VOGLIO LE TABELLE UNA DI FIANCO ALL'ALTRA]
+In conclusion, we would like to underline the main characteristics identified in the first scenario. We can notice that, in order to stress the system, decreasing a few time units the task generation delay is enough to have the system unable to handle the configuration. The same can be said for increasing the human delay.
 
-\begin{table}[h]
-    \centering
-        \begin{tabular}{|c c|} 
-            \hline
-            Parameter & Value \\ [0.5ex] 
-            \hline\hline
-            mT & 40 \\
-            vT & 5 \\
-            mH & 6 \\
-            vH & 4 \\
-            k & 2 \\ [0.5ex] 
-            \hline
-        \end{tabular}
-        \caption{Upper bound modifying $k$}
-        \label{tab:upboundrobot}
-\end{table}
+On the other hand, the system begins to behave in a smooth way only when we set quite high the task generation delay. We will better understand in section \ref{secondscenario} that this behaviour is typical when there are few robots in the system.
 
-\begin{table}[h]
-    \centering
-        \begin{tabular}{|c c|} 
-            \hline
-            Parameter & Value \\ [0.5ex] 
-            \hline\hline
-            mT & 40 \\
-            vT & 5 \\
-            mH & 6 \\
-            vH & 4 \\
-            k & 2 \\ [0.5ex] 
-            \hline
-        \end{tabular}
-        \caption{Upper bound modifying $mT$}
-        \label{tab:upboundtask}
-\end{table}
-
-\begin{table}[h]
-    \centering
-        \begin{tabular}{|c c|} 
-            \hline
-            Parameter & Value \\ [0.5ex] 
-            \hline\hline
-            mT & 40 \\
-            vT & 5 \\
-            mH & 6 \\
-            vH & 4 \\
-            k & 2 \\ [0.5ex] 
-            \hline
-        \end{tabular}
-        \caption{Upper bound modifying $mT$}
-        \label{tab:upboundhuman}
-\end{table}
-
-We have analysed a scenario with few robots and a \texttt{10x10} grid.
-
-We would like to focus on the values used in order to make the verification mentioned above. As you can notice looking at the Tables \ref{tab:firstattempt}, \ref{tab:lowbound}, \ref{tab:upboundrobot}, \ref{tab:upboundtask} and \ref{tab:upboundhuman}, it is easier to stress the system rather than to have a suitable configuration. [NEL CASO SI AVVERI, DIRO' CHE QUESTO E' DOVUTO AI POCHI ROBOT E CHE SI PUO' VEDERE LA DIFFERENZA CON GLI STESSI PARAMETRI USATI DA PIU' ROBOT]
-
-\subsubsection{Second Scenario}
+\subsubsection{Second Scenario} \label{secondscenario}
 In this scenario, we will analyse a configurations with six robots and a \texttt{10x10} grid.
 
-The intuitive reasoning could be that the more robots there are in the system, the faster it will in digesting the tasks continuously generated. Moreover, the number of robots is much less than the number of possible cells in the grid.
+The intuitive reasoning could be that the more robots there are in the system, the smoothest it will be in handling a non trivial number of tasks. Moreover, it should be improbable for the robots to find `traffic' in the map, as they are much less than the total number of cells available.
 
-However, a \texttt{10x10} grid with the configuration showed before [DO PER SCONTATO CHE ABBIATE MOSTRATO O CITATO LA BOARD] is not enough to avoid `traffic' among the robots. Indeed, the results of the verification are far worser than the expected. In order to compare the two scenarios, we used the same values of Table \ref{tab:firstattempt} and observed the results. The probability of filling up the queue is greater than before: it lies in the range \texttt{[0.601786,0.701727]}.
+However, the results of the verification are far worser than the expected. In order to compare the two scenarios, we used the same values of the \emph{Scen 1.a} at Table \ref{tab:scenonetable}. The resulting probability the one showed at  The probability of filling up the queue is greater than before: it lies in the range \texttt{[0.601786,0.701727]}.
 
 We therefore did the same steps as in the previous scenarios, to see if there were some differences in the distribution of the probabilities. After using the same values of Tabel \ref{tab:lowbound}, the resulting range of probability was \texttt{[0.199284,0.299149]}, about the 15\% more than the result with three robots. Considering that the verification results showed in the previous paragraph were about the 35\% higher than the case with three robots, we can conclude that with more robots it is faster improving the situation. It also makes sense, because the less tasks there are, the less `traffic' there is.
 
