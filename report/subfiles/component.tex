@@ -5,7 +5,7 @@ The detailed description of the system components is presented in this section. 
 The project declarations contain the auxiliary functions and variables to facilitate the implementation of the model. 
 For instance, functions such as \texttt{stdNormal()} and \texttt{Normal(mean, stdDev)} are essential to produce the delays that follow a Normal Distribution.
 
-Moreover, this section features the constants, the channels and, in a more general way, the required data structures. The most important characteristics are:
+Moreover, this section features the constants and, in a more general way, the required data structures. The most important characteristics are:
 
 \begin{tabularx}{\textwidth}{lX}
 \textbf{Grid} & The warehouse floor plan has been represented by a parametric N $\times$ M matrix. The matrix choice easily allows to compute offsets and distances between grid slots. Furthermore it has an intuitive visual prospect.
@@ -23,7 +23,7 @@ The Task Queue template models the generation and dispatching of tasks. Since th
 \begin{tabularx}{\textwidth}{lX}
 \multicolumn{2}{l}{{\scshape Normal Execution}}
  \vspace{0,2cm}\\
-\texttt{task\_generation} & The Task Queue generates a new task and places it in the FIFO queue. The generation happens with a variable delay \texttt{task\_delay}, computed every time following a Normal Distribution. \vspace{0,2cm}\\
+\texttt{task\_generation} & The Task Queue generates a new task and places it in the FIFO queue. The generation happens with a variable delay \texttt{task\_delay}, computed every time following a Normal Distribution \cite{David2015}. \vspace{0,2cm}\\
 \texttt{task\_sent} & The timed automaton synchronizes with an idle robot on the first item of the task queue. It sends the information about the pod id, matched with the task, to the robot. After that, it removes the assigned task from the queue. This is useful because it avoids that multiple robots process the same task. \vspace{0,4cm}\\
 \multicolumn{2}{l}{{\scshape Error States}} \vspace{0,2cm}\\
 \texttt{Error\_maxSizeReached}  & This error state is reached when the task queue is full. The newly generated tasks would be lost, so the timed automaton stops its behaviour. \vspace{0,2cm}\\

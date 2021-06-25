@@ -1,6 +1,6 @@
 \documentclass[12pt,oneside,a4paper]{article}
 
-\usepackage[backend=biber,style=numeric]{biblatex}
+\usepackage[style=numeric]{biblatex}
 \usepackage{xcolor}
 \usepackage{amsmath, amssymb}
 \usepackage{multicol}
@@ -12,6 +12,8 @@
 \usepackage{ltablex}
 
 \pagestyle{headings}
+
+\addbibresource{biblio.bib}
 
 \title{Formal Methods for Concurrent and Real-Time Systems}
 \author{Giacomini Davide \and Giarduz Andrea \and Grosso Veronica}
@@ -40,7 +42,7 @@
         \vfill
         
         \vspace*{0,8cm}
-        \Large{Giacomini Davide\\
+        \Large{{\scshape Authors} \\ Giacomini Davide\\
         Giarduz Andrea\\
         Grosso Veronica
         }
@@ -48,6 +50,7 @@
         \vspace{1,2cm}
            
         \Large
+        {\scshape Instructors}\\
         Prof. San Pietro Pierluigi\\
         Dr. Lestingi Livia
     \end{center}
@@ -68,5 +71,7 @@
 \input{subfiles/component}
 \input{subfiles/properties}
 \input{subfiles/conclusion}
+
+\printbibliography\addcontentsline{toc}{section}{Abstract}
 
 \end{document}
